@@ -18,6 +18,7 @@
   <div id="boot" class="boot boot-full" aria-live="polite">
     <span class="boot-mark" aria-hidden="true"></span>
     <p class="boot-title" data-i18n="app.title">Still Out There</p>
+    <p class="boot-hook" id="boot-hook"></p>
     <p class="boot-text">Calling the machines…</p>
     <div class="boot-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
     <p class="boot-meta"><span class="boot-pct">0%</span><span class="boot-mb"></span></p>
@@ -32,13 +33,14 @@
     <span></span>
     <div class="tools">
       <p class="signal" id="signal" hidden></p>
-      <button type="button" class="tool icon-tool" id="sound-btn" data-i18n-label="scroll.sound" aria-label="Sound" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span></button>
+      <button type="button" class="tool sound-tool" id="sound-btn" data-i18n-label="scroll.sound" aria-label="Sound" aria-pressed="false"><svg class="spk" viewBox="0 0 20 20" aria-hidden="true"><path class="spk-body" d="M3 7.5h3l4-3.5v12l-4-3.5H3z"/><path class="spk-on" d="M13 7a4 4 0 0 1 0 6M15.5 4.5a7.5 7.5 0 0 1 0 11"/><path class="spk-off" d="M13.5 7.5l5 5m0-5l-5 5"/></svg><span data-i18n="scroll.sound">Sound</span></button>
       <span class="langs" role="group" aria-label="Language"></span>
       <a class="tool tool-classic" href="classic.html" data-i18n="scroll.classic">Classic view</a>
     </div>
   </header>
 
   <nav class="rail" id="rail" data-i18n-label="scroll.journey" aria-label="Journey"></nav>
+  <p class="rail-where" id="rail-where" aria-live="off"></p>
   <main id="card" class="card-host" tabindex="-1">
     <noscript><p class="loading">This site needs JavaScript to work out what time it is on Mars.</p></noscript>
   </main>

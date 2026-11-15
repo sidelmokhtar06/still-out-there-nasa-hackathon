@@ -14,6 +14,7 @@ import { lightTimes, clock, kmOf } from '../reach.js';
 import { daysSince } from '../live.js';
 import { soundOn, setSound, mix, captions, SOUND_FILES } from './sound.js';
 import { preload, asset } from './preload.js';
+import { NOW_FILES, nowOf } from './now.js';
 import { layerOpen, closeLayer, showStory, showPhoto, showSources, holdButton, paintSignal, paintPayoff } from './layers.js';
 
 const $ = (id) => document.getElementById(id);
@@ -260,9 +261,24 @@ function view(card) {
   let v;
   if (own) v = { el: own(), wide: card === 'start', center: card === 'lastCall' };
   else { const s = buildStop(card, ctx); v = { el: s.el, labels: s.labels, leave: s.leave, side: !!s.side }; }
+  if (MACHINES.includes(card)) addTodayAndScience(v.el, card);
   if (card === 'start') v.labels = [{ text: t('body.moon'), kind: 'world', get: () => U.bodyPos('moon') }];
   views.set(card, v);
   return v;
+}
+
+/** On a machine's card: one bold line on the science it made possible, and its "where it is today" picture. */
+function addTodayAndScience(el, id) {
+  const learned = h('p', { class: 'learned' }, h('span', { class: 'learned-k' }, t('scroll.learned')), t(`scroll.learned.${id}`));
+  const voice = el.querySelector('.voice');
+  if (voice) voice.after(learned); else el.querySelector('.actions')?.before(learned);
+  const now = nowOf(id), actions = el.querySelector('.actions');
+  if (now && actions) {
+    actions.append(h('button', { type: 'button', class: 'thumb thumb-now', onclick: (e) => showPhoto(artifact(id), { x: e.clientX, y: e.clientY }, 'now'), 'aria-label': t('scroll.now.title') },
+      h('img', { src: now.src, alt: '' }), h('span', {}, t('scroll.now.title'), ' ↗')));
+  } else if (!now) {
+    learned.after(h('p', { class: 'now-far' }, t('scroll.now.far')));
+  }
 }
 
 /** Wraps each word of a title so it can rise out of a mask. */
@@ -473,6 +489,16 @@ function paintRail(y, i) {
   for (let j = 0; j < ys.length - 1; j++) if (y >= ys[j]) k = j + clamp((y - ys[j]) / (ys[j + 1] - ys[j]));
   rail.style.setProperty('--k', k / (ys.length - 1));
   [...rail.children].forEach((a, j) => { a.classList.toggle('is-here', j === here); a.classList.toggle('is-past', j < here); });
+  // where you are, in words: "The Moon · 3 / 17"
+  const w = SEG[i].world, world = Array.isArray(w) ? w[1] : w;
+  const text = `${world === 'earth' ? t('body.earth') : t(`chapter.${world}`)} · ${here + 1} / ${RAIL.length}`;
+  const where = $('rail-where');
+  if (where.textContent !== text) where.textContent = text;
+}
+/** Desktop: the label sits just above the rail (measured, since the rail's height depends on the screen). */
+function placeRailLabel() {
+  const where = $('rail-where');
+  where.style.top = innerWidth >= 760 ? `${$('rail').getBoundingClientRect().top - 10}px` : '';
 }
 
 let painted = null, lastT = 0, vel = 0, frames = 0, slow = 0, lowered = false;
@@ -604,7 +630,7 @@ function hasWebGL() {
 function journeyFiles() {
   const photos = MACHINES.map((id) => imageOf(artifact(id))?.src).filter(Boolean);
   const draco = ['draco_wasm_wrapper.js', 'draco_decoder.wasm'].map((f) => `vendor/three/addons/libs/draco/gltf/${f}`);
-  return [...Object.values(MAPS).map(mapSrc), ...Object.values(MODELS).map((m) => m.file), ...SOUND_FILES, ...photos, ...draco];
+  return [...Object.values(MAPS).map(mapSrc), ...Object.values(MODELS).map((m) => m.file), ...SOUND_FILES, ...photos, ...NOW_FILES, ...draco];
 }
 
 // ---- no 3D: the same journey as a plain page of cards ------------------------------------------------
@@ -671,6 +697,8 @@ async function start() {
   await loadData();
   if (!hasWebGL()) { textJourney(); return; }
 
+  // something true to read while it loads: how far away the worlds are right now, in light time
+  { const lt = lightTimes(); $('boot-hook').textContent = t('scroll.boot.hook', { moon: clock(lt.moon), mars: clock(lt.mars) }); }
   // 1. download everything (into memory), with real progress
   bootStage(t('scroll.boot.download'), 0);
   const failed = await preload(journeyFiles(), (f, loaded, total) => bootStage(null, f * 0.88, loaded, total));
@@ -697,7 +725,8 @@ async function start() {
     addEventListener('pointerdown', wake, true); addEventListener('keydown', wake, true);
   }
   layout();
-  addEventListener('resize', () => { layout(); shownSeg = null; painted = null; });
+  placeRailLabel();
+  addEventListener('resize', () => { layout(); placeRailLabel(); shownSeg = null; painted = null; });
   addEventListener('hashchange', () => route());
   addEventListener('keydown', keys);
   picking();

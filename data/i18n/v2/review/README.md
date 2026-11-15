@@ -1,6 +1,6 @@
 # Translations waiting for review
 
-Draft French and Arabic for the scroll journey's new lines (`scroll.*`), written by an AI assistant.
+Draft French and Arabic for the scroll journey's new lines (`scroll.*`), not yet checked by a native speaker.
 They are **not loaded by the site**: until they are checked, French and Arabic readers see these lines in English.
 
 To ship them: a team member who reads the language checks each line in `fr.json` / `ar.json` here,

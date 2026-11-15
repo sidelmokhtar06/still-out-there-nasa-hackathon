@@ -38,6 +38,18 @@ No NASA logos or mission patches are used. This project is not endorsed by NASA.
 
 Each links to https://images.nasa.gov/details/&lt;NASA ID&gt;. Photos are resized and compressed.
 
+## "Where it is today" (`assets/img/now/`, resized, WebP)
+| Machine | Image | Credit / source |
+|---|---|---|
+| Eagle | Apollo 11: Second Look (LRO, 2009), PIA12909 | NASA/GSFC/Arizona State University, https://images.nasa.gov/details/PIA12909 |
+| Surveyor 3 | First Look: Apollo 12 and Surveyor 3 (LROC NAC M104662862R) | NASA/GSFC/Arizona State University, https://lroc.im-ldi.com/images/141 |
+| Lunar Roving Vehicle | Follow the Tracks (LROC NAC M175252641, 2011) | NASA/GSFC/Arizona State University, https://lroc.im-ldi.com/images/491 |
+| Laser retroreflector | New View of Apollo 14, close-up (LROC NAC M150633128) | NASA/GSFC/Arizona State University, https://lroc.im-ldi.com/images/285 |
+| Sojourner | Mars Pathfinder Landing Site and Surroundings, figure 5 (panorama marked "Sojourner?"), PIA09105 | NASA/JPL, https://science.nasa.gov/photojournal/mars-pathfinder-landing-site-and-surroundings |
+| Opportunity | Opportunity After the Dust Storm (HiRISE, 20 Sept 2018), figure 1, PIA22549 | NASA/JPL-Caltech/University of Arizona, https://science.nasa.gov/photojournal/opportunity-after-the-dust-storm |
+| InSight | The Best View of InSight (HiRISE, 23 Sept 2019), PIA23376 | NASA/JPL-Caltech/University of Arizona, https://images.nasa.gov/details/PIA23376 |
+| Ingenuity | Perseverance Spots Ingenuity at Its Final Airfield (4 Feb 2024), PIA26236 | NASA/JPL-Caltech/ASU/MSSS, https://images.nasa.gov/details/PIA26236 |
+
 ## Sounds (trimmed, converted to mono MP3, volume normalised)
 | Machine | What | Credit / source |
 |---|---|---|

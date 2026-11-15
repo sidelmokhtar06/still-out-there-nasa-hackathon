@@ -148,3 +148,28 @@ body.no-3d .card-host { position: static; width: auto; max-height: none; transfo
 .text-journey { display: grid; gap: 72px; max-width: 640px; margin: 0 auto; padding: 110px 16px 80px; }
 .text-journey .card { opacity: 1; }
 .tj-stop { scroll-margin-top: 90px; padding-top: 24px; border-top: 1px solid var(--line); }
+
+/* ---- the science it made possible, and where it is today ---- */
+.learned { position: relative; padding: 10px 14px; border-radius: 10px; background: rgba(255, 255, 255, .07); border-inline-start: 3px solid var(--accent);
+  font-size: .9375rem; line-height: 1.45; color: var(--ink); max-width: 34em; text-shadow: none; }
+.learned-k { display: block; margin-bottom: 2px; font-family: var(--mono); font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.now-far { font-size: .8125rem; color: var(--muted); max-width: 34em; }
+.thumb-now img { filter: grayscale(.2); }
+.photo-tabs { justify-self: center; margin-bottom: 4px; }
+.lightbox img.wide { width: min(1100px, 92vw); max-height: none; }
+
+/* ---- sound button: a speaker with the word, so nobody mistakes it for "more" ---- */
+.sound-tool { gap: 7px; }
+.spk { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.spk-body { fill: currentColor; stroke: none; }
+.sound-tool[aria-pressed="true"] .spk-off, .sound-tool[aria-pressed="false"] .spk-on { display: none; }
+.sound-tool[aria-pressed="false"] { color: var(--muted); }
+
+/* ---- where you are, in words, next to the rail ---- */
+.rail-where { position: fixed; z-index: 20; inset-inline-end: var(--pad); top: calc(50% - 196px); margin: 0; transform: translateY(-100%);
+  font-family: var(--mono); font-size: .6875rem; letter-spacing: .04em; color: var(--ink-2); white-space: nowrap; }
+@media (max-width: 760px) { .rail-where { top: calc(env(safe-area-inset-top, 0px) + 78px); inset-inline-end: 12px; transform: none; } }
+body.no-3d .rail-where { display: none; }
+
+/* ---- the loading screen's hook ---- */
+.boot-hook { max-width: 30em; margin: 0; padding-inline: 16px; text-align: center; font-size: .9375rem; line-height: 1.45; color: var(--ink-2); min-height: 1.4em; }

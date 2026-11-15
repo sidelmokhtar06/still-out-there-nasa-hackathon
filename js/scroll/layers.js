@@ -6,6 +6,7 @@ import { t, lang } from '../i18n.js';
 import { db } from '../data.js';
 import { openStory, imageOf } from '../story.js';
 import { lightTimes, clock, kmOf } from '../reach.js';
+import { nowOf } from './now.js';
 
 const $ = (id) => document.getElementById(id);
 const gsap = globalThis.gsap;
@@ -43,15 +44,30 @@ export function showStory(id, start, order, onClose) {
   openLayer((layer) => { story = openStory(layer, id, start, order, { onClose }); }, null);
 }
 
-/** The real photo of machine a. from = {x, y}: the screen point it grows out of (where you tapped the model). */
-export function showPhoto(a, from) {
-  const img = imageOf(a);
-  if (!img) return;
+/** The real photos of machine a: on the surface (then) and where it is today (now), with a switch between them.
+ *  from = {x, y}: the screen point it grows out of (where you tapped). which: 'then' or 'now'. */
+export function showPhoto(a, from, which = 'then') {
+  const img = imageOf(a), now = nowOf(a.id);
+  if (!img && !now) return;
+  const views = {
+    then: img && { src: img.src, alt: t(img.alt_key), caption: t(img.caption_key), credit: img.credit, cls: a.id === 'opportunity' ? 'pixelated' : '' },
+    now: now && { src: now.src, alt: t(`scroll.now.${a.id}`), caption: t(`scroll.now.${a.id}`), credit: now.credit, cls: now.wide ? 'wide' : '' },
+  };
+  if (!views[which]) which = views.then ? 'then' : 'now';
   openLayer((layer) => {
-    layer.replaceChildren(h('div', { class: 'lightbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': t(img.caption_key) },
+    const pic = h('img', {}), cap = h('figcaption', {});
+    const tabs = views.then && views.now ? h('div', { class: 'seg photo-tabs', role: 'group', 'aria-label': t('scroll.now.title') },
+      ['then', 'now'].map((k) => h('button', { type: 'button', 'data-k': k, onclick: () => show(k) }, t(k === 'then' ? 'scroll.now.then' : 'scroll.now.title')))) : null;
+    function show(k) {
+      const v = views[k];
+      pic.src = v.src; pic.alt = v.alt; pic.className = v.cls;
+      cap.replaceChildren(v.caption, ' ', h('span', { class: 'muted' }, t('media.credit', { credit: v.credit })));
+      for (const b of tabs?.children ?? []) b.setAttribute('aria-pressed', String(b.dataset.k === k));
+    }
+    layer.replaceChildren(h('div', { class: 'lightbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': a.name },
       h('button', { type: 'button', class: 'icon-btn lightbox-close', 'aria-label': t('sources.close'), onclick: closeLayer }, '×'),
-      h('figure', {}, h('img', { src: img.src, alt: t(img.alt_key), class: a.id === 'opportunity' ? 'pixelated' : '' }),
-        h('figcaption', {}, t(img.caption_key), ' ', h('span', { class: 'muted' }, t('media.credit', { credit: img.credit }))))));
+      h('figure', {}, tabs, pic, cap)));
+    show(which);
     layer.querySelector('.lightbox-close').focus();
     if (from && !reduced()) {
       const fig = layer.querySelector('figure'), r = fig.getBoundingClientRect();
