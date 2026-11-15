@@ -80,5 +80,7 @@
   "scroll.spot.lrv": "La tache sombre au bout de la longue ligne est le rover, garé là où les astronautes l'ont laissé. La ligne est la trace qu'ils ont laissée.",
   "scroll.spot.retro": "Le minuscule point brillant est la station scientifique ; le miroir laser en fait partie. Le chemin sombre est la trace des pas des astronautes.",
   "scroll.spot.insight": "Le minuscule point bleu-vert est InSight. La tache sombre autour est l'endroit où ses fusées d'atterrissage ont soufflé la poussière.",
-  "scroll.spot.missBig": "Pas tout à fait : tu étais à {m} m."
+  "scroll.spot.missBig": "Pas tout à fait : tu étais à {m} m.",
+  "scroll.hint.eagle": "Active le son pour entendre le vrai décollage d'Apollo 11",
+  "scroll.hint.mars": "Active le son pour entendre le vrai vent de Mars"
 }

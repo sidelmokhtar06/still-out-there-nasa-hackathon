@@ -493,13 +493,14 @@ export function createUniverse(host, { onPick } = {}) {
 
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   ray.camera = camera;
-  function focusMachine(id) {
+  function focusMachine(id, keep = null) {
     focused = id;
     const m = machines.get(id);
-    // Machines are drawn far larger than life so you can see them, so neighbours hundreds of km apart would crowd
-    // each other. At a machine, hide the others within 15° of it: in reality they are far over the horizon.
+    // Machines are drawn far larger than life so you can see them, so a neighbour hundreds of km away would loom like a
+    // giant. At a machine (or flying between two, keep), the others on that world are hidden: in reality they are far
+    // over the horizon.
     for (const r of machines.values()) {
-      r.focusShow = !m || !m.onWorld || !r.onWorld || r === m || r.body !== m.body || r.holder.position.angleTo(m.holder.position) > 0.26;
+      r.focusShow = !m || !m.onWorld || !r.onWorld || r.body !== m.body || r === m || r.id === keep;
     }
     if (!m) {
       // No machine: the old shadow map would land on whatever planet is near (a dark patch on Earth). Point a tiny
@@ -571,7 +572,7 @@ export function createUniverse(host, { onPick } = {}) {
       const show = r.focusShow ?? true;
       if (!r.onWorld) { r.holder.visible = show; continue; }
       r.holder.getWorldPosition(nearPos);
-      const f = clamp01((16 * r.size - camera.position.distanceTo(nearPos)) / (7 * r.size));
+      const f = clamp01((11 * r.size - camera.position.distanceTo(nearPos)) / (5 * r.size));
       r.holder.visible = show && f > 0;
       r.holder.scale.setScalar(Math.max(1e-3, f * f * (3 - 2 * f)));
     }

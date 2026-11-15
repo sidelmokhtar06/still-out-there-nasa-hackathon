@@ -1,9 +1,10 @@
 // Scroll-driven sound for the prototype. Every level is worked out from where you are (section + u),
 // so sound rewinds with the picture. Real recordings (assets/audio/scroll/, see CREDITS.md):
-//   Eagle's onboard recorder at lift-off (Apollo 11) · Perseverance humming on its way to Mars ·
-//   Mars wind from Perseverance's SuperCam microphone · a Martian dust devil passing over Perseverance.
+//   Eagle's onboard recorder at lift-off (Apollo 11) · Earth's "chorus" radio waves (Van Allen Probes) as you leave or
+//   come home · Voyager 1's interstellar plasma waves on the flights out to deep space · Mars wind from Perseverance's
+//   SuperCam microphone · a Martian dust devil passing over Perseverance.
 // Music is the site's per-world loops (assets/audio/music/). A little generated noise is kept underneath:
-// a short thump at ignition, radio static on the Moon flight, and some high wind so the storm is still
+// a short thump at ignition and some high wind so the storm is still
 // audible on small speakers (real Mars wind is almost all below 100 Hz).
 import { asset } from './preload.js';
 
@@ -13,7 +14,8 @@ const MUSIC = 0.2;                       // same level as the classic journey's 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const band = (u, a, b) => clamp((u - a) / (b - a));
 
-const REAL = { ascent: 'apollo11-ascent-onboard', cruise: 'perseverance-cruise-loop', wind: 'mars-wind-sol4-loop', devil: 'mars-dust-devil' };
+const REAL = { ascent: 'apollo11-ascent-onboard', chorus: 'space-chorus-loop', voyager: 'space-voyager-loop', wind: 'mars-wind-sol4-loop', devil: 'mars-dust-devil' };
+const REAL_LOOP_N = { chorus: 1183745, voyager: 948150 };       // exact loop lengths in samples (44.1 kHz), past the MP3 start padding
 /** Every sound file the journey plays (for the loading screen). */
 export const SOUND_FILES = [...['moon', 'mars', 'deep'].map((w) => `assets/audio/music/${w}.mp3`), ...Object.values(REAL).map((n) => `assets/audio/scroll/${n}.mp3`)];
 // Captions for the lift-off clip, in NASA's own words (Apollo Lunar Surface Journal, 124:21:54 to 124:22:08 GET).
@@ -57,9 +59,6 @@ async function build() {
   const lfo = ctx.createOscillator(), lfoAmt = gainOf(0.35);
   lfo.frequency.value = 0.13; lfo.connect(lfoAmt).connect(gust.gain); lfo.start();
   noise.connect(windF).connect(gust).connect(wind).connect(out);
-  // radio static between worlds
-  const hiss = gainOf();
-  noise.connect(filter('highpass', 2800)).connect(filter('lowpass', 7000)).connect(hiss).connect(out);
   // music, through one filter that the dust closes
   const muffle = filter('lowpass', 18000), music = gainOf(1);
   muffle.connect(music).connect(out);
@@ -75,17 +74,20 @@ async function build() {
     }).catch((err) => console.warn('music unavailable', err));
   }
   // real recordings: two loops whose levels follow the scroll, two one-shots
-  const buffers = {}, real = { cruise: gainOf(), wind: gainOf() };
-  real.cruise.connect(out); real.wind.connect(out);
+  const buffers = {}, real = { chorus: gainOf(), voyager: gainOf(), wind: gainOf() };
+  for (const g of Object.values(real)) g.connect(out);
   await Promise.all(Object.entries(REAL).map(([k, name]) => fetch(asset(`assets/audio/scroll/${name}.mp3`))
     .then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).then((b) => { buffers[k] = b; })
     .catch((err) => console.warn('sound unavailable', name, err))));
-  for (const k of ['cruise', 'wind']) {
-    if (!buffers[k]) continue;
-    const s = ctx.createBufferSource();
-    s.buffer = buffers[k]; s.loop = true; s.connect(real[k]); s.start();
+  for (const k of Object.keys(real)) {
+    const b = buffers[k];
+    if (!b) continue;
+    const s = ctx.createBufferSource(), n = REAL_LOOP_N[k], off = n && b.duration > n / 44100 + 0.02 ? 1105 / 44100 : 0;
+    s.buffer = b; s.loop = true;
+    if (n) { s.loopStart = off; s.loopEnd = Math.min(off + n / 44100, b.duration); }
+    s.connect(real[k]); s.start(0, off);
   }
-  nodes = { rumble, wind, windF, hiss, muffle, music, loops, out, real, buffers };
+  nodes = { rumble, wind, windF, muffle, music, loops, out, real, buffers };
   document.addEventListener('visibilitychange', () => { if (!soundOn()) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
 }
 
@@ -130,13 +132,13 @@ function blip(freq = 880, level = 0.05, dur = 0.18) {
 
 /** Applies one moment's sound. The page works out every value from the scroll position:
  *  music {moon, mars, deep} 0…1 · hush 0…1 (music falls away) · engine 0…1 · dust 0…1 ·
- *  hiss / cruise 0…1 (between worlds) · lift: where you are in the lift-off (-1 before it, 0…1 in it, 2 still on
+ *  chorus / voyager 0…1 (between worlds) · lift: where you are in the lift-off (-1 before it, 0…1 in it, 2 still on
  *  the Moon after it, 3 gone) · devil: storm level for the dust-devil trigger · mile: current milestone text ·
  *  call: inside the last call. */
 export function mix(m) {
   last = [m];
   if (!nodes || ctx.state !== 'running') return;
-  const n = nodes, { music, hush = 0, engine = 0, dust = 0, hiss = 0, cruise = 0, lift = -1, devil = 0, mile = '', call = false } = m;
+  const n = nodes, { music, hush = 0, engine = 0, dust = 0, chorus = 0, voyager = 0, lift = -1, devil = 0, mile = '', call = false } = m;
   // lift-off voices: start when you scroll into the lift-off going forward; stop if you go back before it or leave the Moon
   if (lift >= 0.02 && lift <= 1 && prevLift < 0.02) startAscent();
   if (lift < 0 || lift > 2) stopAscent();
@@ -150,9 +152,9 @@ export function mix(m) {
   set(n.real.wind.gain, 1.1 * dust ** 1.2, 0.25);
   set(n.wind.gain, 0.16 * dust ** 1.4, 0.2);
   set(n.windF.frequency, 380 + 520 * dust, 0.4);
-  // between worlds: radio static, and on the way to Mars, Perseverance's own hum recorded on that trip
-  set(n.hiss.gain, 0.035 * hiss, 0.15);
-  set(n.real.cruise.gain, 1.2 * cruise, 0.3);
+  // between worlds: the real radio waves of space, played as sound (quietly, under the music)
+  set(n.real.chorus.gain, 0.32 * chorus, 0.4);
+  set(n.real.voyager.gain, 0.3 * voyager, 0.4);
   // the dust devil roars past once as the storm thickens (forward only)
   if (devil >= 0.6 && prevDust < 0.6) oneShot('devil', 0.9);
   prevDust = devil;
@@ -166,5 +168,5 @@ export function mix(m) {
 export function levels() {
   if (!nodes) return null;
   const n = nodes;
-  return { state: ctx.state, ascent: !!ascentPlay, cruise: n.real.cruise.gain.value, realWind: n.real.wind.gain.value, loaded: Object.keys(n.buffers), moon: n.loops.moon.gain.value, mars: n.loops.mars.gain.value, deep: n.loops.deep.gain.value, muffle: n.muffle.frequency.value, rumble: n.rumble.gain.value, wind: n.wind.gain.value, hiss: n.hiss.gain.value };
+  return { state: ctx.state, ascent: !!ascentPlay, chorus: n.real.chorus.gain.value, voyager: n.real.voyager.gain.value, realWind: n.real.wind.gain.value, loaded: Object.keys(n.buffers), moon: n.loops.moon.gain.value, mars: n.loops.mars.gain.value, deep: n.loops.deep.gain.value, muffle: n.muffle.frequency.value, rumble: n.rumble.gain.value, wind: n.wind.gain.value, };
 }

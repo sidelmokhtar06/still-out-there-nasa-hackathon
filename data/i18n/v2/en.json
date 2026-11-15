@@ -196,5 +196,7 @@
   "scroll.spot.lrv": "The dark spot at the end of the long line is the rover, parked where the astronauts left it. The line is the trail they left behind.",
   "scroll.spot.retro": "The tiny bright dot is the science station; the laser mirror is part of it. The dark path is the trail the astronauts walked.",
   "scroll.spot.insight": "The tiny blue-green speck is InSight. The dark patch around it is where its landing rockets blew the dust away.",
-  "scroll.spot.missBig": "Not quite: you were {m} m away."
+  "scroll.spot.missBig": "Not quite: you were {m} m away.",
+  "scroll.hint.eagle": "Turn on sound to hear the real Apollo 11 lift-off",
+  "scroll.hint.mars": "Turn on sound to hear the real wind on Mars"
 }

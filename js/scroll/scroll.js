@@ -122,16 +122,18 @@ function cruise(a, b, turn = 0.35) {
  *  height that suits the distance, looking ahead at where it is going, then down to the next machine. The horizon stays
  *  level the whole way (no roll), so you always know which way is forward. */
 function hop(a, b, C) {
-  const n0 = V(a.target).sub(C).normalize(), n1 = V(b.target).sub(C).normalize();
+  // the track runs from the ground under where the camera stands (not under the machine), so it lifts straight up
+  // beside the machine and never passes through it, and comes straight down onto the next view
+  const n0 = V(a.pos).sub(C).normalize(), n1 = V(b.pos).sub(C).normalize();
   const R = a.target.distanceTo(C), th = Math.max(1e-4, n0.angleTo(n1)), axis = V(n0).cross(n1).normalize();
   const top = R * clamp(th * 0.75, 0.1, 0.6);                            // farther apart, higher up
   const along = (s) => V(n0).applyAxisAngle(axis, th * s);
   const f = (u) => {
-    const s = ease(band(u, 0.1, 0.9));                                     // travel along the ground
-    const alt = top * (ease(band(u, 0, 0.38)) - ease(band(u, 0.62, 1)));   // climb, cruise, come down
+    const s = ease(band(u, 0.15, 0.85));                                   // travel along the ground
+    const alt = top * (ease(band(u, 0, 0.35)) - ease(band(u, 0.65, 1)));   // climb, cruise, come down
     const ahead = clamp(s + (alt * 1.1) / R / th);                         // look as far ahead as you are high
     let pos = V(C).add(along(s).multiplyScalar(R + alt)), target = V(C).add(along(ahead).multiplyScalar(R)), up = along(s);
-    const w0 = 1 - ease(band(u, 0, 0.2)), w1 = ease(band(u, 0.8, 1));      // leave and arrive on the stops' own views
+    const w0 = 1 - ease(band(u, 0, 0.25)), w1 = ease(band(u, 0.75, 1));    // leave and arrive on the stops' own views
     pos = pos.lerp(a.pos, w0).lerp(b.pos, w1); target = target.lerp(a.target, w0).lerp(b.target, w1);
     up = up.lerp(a.up, w0).lerp(b.up, w1).normalize();
     U.pose(pos, target, up);
@@ -405,6 +407,18 @@ function paintFlight(seg, u, i) {
   }
 }
 
+// ---- the sound of space between worlds ------------------------------------------------------------
+/** Earth's chorus (Van Allen Probes) while you cross the radiation belts around Earth, leaving or coming home;
+ *  Voyager 1's interstellar plasma waves on the flights out to deep space. 0…1 each. */
+function spaceSound(id, u) {
+  const out = band(u, 0.03, 0.14);
+  if (id === 'toMoon') return { chorus: out * (1 - band(u, 0.5, 0.8)), voyager: 0 };
+  if (id === 'toMars') return { chorus: out * (1 - band(u, 0.25, 0.45)), voyager: 0 };
+  if (id === 'toDeep' || id === 'toKepler' || id === 'toPioneer10') return { chorus: 0, voyager: out * (1 - band(u, 0.85, 0.97)) };
+  if (id === 'goHome') return { chorus: band(u, 0.6, 0.78) * (1 - band(u, 0.9, 0.99)), voyager: out * (1 - band(u, 0.35, 0.55)) };
+  return { chorus: 0, voyager: 0 };
+}
+
 // ---- what the scene looks like at each moment --------------------------------------------------
 const dayAt = (site) => clamp(((U.sunAt(site) ?? 1) + 0.05) / 0.3);     // real Sun height at a Mars site, right now
 const airAt = (site) => 0.15 + 0.85 * dayAt(site);
@@ -496,16 +510,15 @@ function paint(y) {
   }
   paintFlight(seg, u, i);
   paintRail(y, i);
+  paintSoundHint(seg, u);
   // sound: every level from where you are
   const engine = seg.id === 'liftoff' ? band(u, 0.1, 0.14) * (1 - band(u, 0.45, 0.75)) : 0;
   document.body.classList.toggle('is-quaking', engine > 0.4 && !reduced());
-  const away = seg.kind === 'flight' ? band(u, 0.06, 0.25) * (1 - band(u, 0.75, 0.94)) : 0;
   mix({
     music: musicOf(seg, u),
     hush: seg.id === 'lastCall' ? 0.9 * band(u, 0, 0.3) * (1 - band(u, 0.8, 1)) : 0,
     engine, dust: storm,
-    hiss: seg.id === 'toMars' ? away * 0.25 : away,
-    cruise: seg.id === 'toMars' ? away : 0,
+    chorus: spaceSound(seg.id, u).chorus, voyager: spaceSound(seg.id, u).voyager,
     lift: i < iL ? -1 : i === iL ? u : seg.world === 'moon' ? 2 : 3,
     devil: seg.id === 'dust' ? storm : 0,
     mile: $('flight').dataset.mile || '',
@@ -517,7 +530,7 @@ function paint(y) {
 function enterSeg(seg, i) {
   shownSeg = seg.id;
   U.setLabels(seg.kind === 'hold' ? view(seg.card)?.labels || [] : []);
-  U.focusMachine(seg.site ?? null);
+  U.focusMachine(seg.site ?? null, seg.hop ? SEG.slice(0, i).reverse().find((s) => s.site)?.site : null);
   if (seg.kind === 'hold' && location.hash !== `#/${seg.id}` && !layerOpen()) history.replaceState(null, '', `#/${seg.id}`);
   // load the next machines' models before you get there
   for (const s of SEG.slice(i, i + 6)) {
@@ -615,7 +628,24 @@ function route(instant = false) {
 // ---- the top bar ----------------------------------------------------------------------------
 function paintSoundBtn() {
   $('sound-btn').setAttribute('aria-pressed', String(soundOn()));
-  for (const b of document.querySelectorAll('.btn-sound-on')) b.hidden = soundOn();
+  if (soundHint && soundOn()) soundHint.hidden = true;
+}
+/** With sound off, a small invitation at the two moments that need it: Eagle's real lift-off and the storm on Mars. */
+let soundHint = null;
+function paintSoundHint(seg, u) {
+  const which = soundOn() || touring ? null
+    : (seg.id === 'toEagle' && u > 0.55) || (seg.id === 'liftoff' && u < 0.45) ? 'eagle'
+      : (seg.id === 'opportunity' && u > 0.4) || (seg.id === 'dust' && u < 0.7) ? 'mars' : null;
+  if (!which) { if (soundHint) soundHint.hidden = true; return; }
+  if (!soundHint) {
+    soundHint = h('button', { type: 'button', class: 'sound-hint', onclick: () => toggleSound(true) });
+    document.body.append(soundHint);
+  }
+  if (soundHint.dataset.k !== which) {
+    soundHint.dataset.k = which;
+    soundHint.replaceChildren(h('span', { class: 'eq', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')), t(`scroll.hint.${which}`));
+  }
+  soundHint.hidden = false;
 }
 async function toggleSound(on = !soundOn()) { await setSound(on); paintSoundBtn(); }
 
