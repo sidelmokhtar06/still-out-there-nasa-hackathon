@@ -37,12 +37,12 @@ const SEG = [
   { id: 'moon', vh: 1.2, kind: 'hold', card: 'moon', world: 'moon' },
   { id: 'toSurveyor3', vh: 1.8, kind: 'move', card: 'surveyor3', world: 'moon', site: 'surveyor3' },
   { id: 'surveyor3', vh: 1.2, kind: 'hold', card: 'surveyor3', world: 'moon', site: 'surveyor3' },
-  { id: 'toEagle', vh: 2.0, kind: 'move', card: 'eagleArrive', world: 'moon', site: 'eagle', cardIn: [0.35, 0.85] },
+  { id: 'toEagle', hop: true, vh: 2.0, kind: 'move', card: 'eagleArrive', world: 'moon', site: 'eagle', cardIn: [0.35, 0.85] },
   { id: 'liftoff', vh: 2.6, kind: 'move', card: 'liftoff', world: 'moon', site: 'eagle', cardIn: [0, 0.1] },
   { id: 'eagle', vh: 1.3, kind: 'hold', card: 'eagle', world: 'moon', site: 'eagle' },
-  { id: 'toLrv', vh: 1.6, kind: 'move', card: 'lrv', world: 'moon', site: 'lrv' },
+  { id: 'toLrv', hop: true, vh: 1.6, kind: 'move', card: 'lrv', world: 'moon', site: 'lrv' },
   { id: 'lrv', vh: 1.2, kind: 'hold', card: 'lrv', world: 'moon', site: 'lrv' },
-  { id: 'toRetro', vh: 1.6, kind: 'move', card: 'retro', world: 'moon', site: 'retro' },
+  { id: 'toRetro', hop: true, vh: 1.6, kind: 'move', card: 'retro', world: 'moon', site: 'retro' },
   { id: 'retro', vh: 1.2, kind: 'hold', card: 'retro', world: 'moon', site: 'retro' },
   { id: 'toEcho', vh: 1.6, kind: 'move', card: 'echo', world: 'moon' },
   { id: 'echo', vh: 1.6, kind: 'hold', card: 'echo', world: 'moon' },
@@ -50,13 +50,13 @@ const SEG = [
   { id: 'mars', vh: 1.2, kind: 'hold', card: 'mars', world: 'mars' },
   { id: 'toSojourner', vh: 1.8, kind: 'move', card: 'sojourner', world: 'mars', site: 'sojourner' },
   { id: 'sojourner', vh: 1.2, kind: 'hold', card: 'sojourner', world: 'mars', site: 'sojourner' },
-  { id: 'toOpportunity', vh: 1.6, kind: 'move', card: 'opportunity', world: 'mars', site: 'opportunity' },
+  { id: 'toOpportunity', hop: true, vh: 1.6, kind: 'move', card: 'opportunity', world: 'mars', site: 'opportunity' },
   { id: 'opportunity', vh: 1.1, kind: 'hold', card: 'opportunity', world: 'mars', site: 'opportunity' },
   { id: 'dust', vh: 3.2, kind: 'hold', card: 'dust', world: 'mars', site: 'opportunity', snapAt: 0.85, cardIn: [0, 0.12] },
   { id: 'lastCall', vh: 1.8, kind: 'hold', card: 'lastCall', world: 'mars', site: 'opportunity', cardIn: [0.05, 0.4], rail: false },
-  { id: 'toInsight', vh: 1.8, kind: 'move', card: 'insight', world: 'mars', site: 'insight' },
+  { id: 'toInsight', hop: true, vh: 1.8, kind: 'move', card: 'insight', world: 'mars', site: 'insight' },
   { id: 'insight', vh: 1.2, kind: 'hold', card: 'insight', world: 'mars', site: 'insight' },
-  { id: 'toIngenuity', vh: 1.6, kind: 'move', card: 'ingenuity', world: 'mars', site: 'ingenuity' },
+  { id: 'toIngenuity', hop: true, vh: 1.6, kind: 'move', card: 'ingenuity', world: 'mars', site: 'ingenuity' },
   { id: 'ingenuity', vh: 1.2, kind: 'hold', card: 'ingenuity', world: 'mars', site: 'ingenuity' },
   { id: 'toDeep', vh: 3.0, kind: 'flight', world: ['mars', 'deep'], flight: ['mars', 'kepler'] },
   { id: 'deep', vh: 1.2, kind: 'hold', card: 'deep', world: 'deep' },
@@ -104,6 +104,28 @@ function between(a, b, lift, k = 0.5) {
   return { pos: V(a.pos).lerp(b.pos, k).add(vec(0, lift, 0)), target: V(b.target), up: vec(0, 1, 0) };
 }
 
+/** Across a world from one site to the next, the way a drone would: straight up, along the curve of the ground at a
+ *  height that suits the distance, looking ahead at where it is going, then down to the next machine. The horizon stays
+ *  level the whole way (no roll), so you always know which way is forward. */
+function hop(a, b, C) {
+  const n0 = V(a.target).sub(C).normalize(), n1 = V(b.target).sub(C).normalize();
+  const R = a.target.distanceTo(C), th = Math.max(1e-4, n0.angleTo(n1)), axis = V(n0).cross(n1).normalize();
+  const top = R * clamp(th * 0.75, 0.1, 0.6);                            // farther apart, higher up
+  const along = (s) => V(n0).applyAxisAngle(axis, th * s);
+  const f = (u) => {
+    const s = ease(band(u, 0.1, 0.9));                                     // travel along the ground
+    const alt = top * (ease(band(u, 0, 0.38)) - ease(band(u, 0.62, 1)));   // climb, cruise, come down
+    const ahead = clamp(s + (alt * 1.1) / R / th);                         // look as far ahead as you are high
+    let pos = V(C).add(along(s).multiplyScalar(R + alt)), target = V(C).add(along(ahead).multiplyScalar(R)), up = along(s);
+    const w0 = 1 - ease(band(u, 0, 0.2)), w1 = ease(band(u, 0.8, 1));      // leave and arrive on the stops' own views
+    pos = pos.lerp(a.pos, w0).lerp(b.pos, w1); target = target.lerp(a.target, w0).lerp(b.target, w1);
+    up = up.lerp(a.up, w0).lerp(b.up, w1).normalize();
+    U.pose(pos, target, up);
+  };
+  f.raw = true;
+  return f;
+}
+
 function buildPoses() {
   const shot = (spec) => U.shot(spec), M = (id) => shot({ kind: 'machine', id });
   const mC = U.bodyPos('moon'), maC = U.bodyPos('mars');
@@ -132,28 +154,28 @@ function buildPoses() {
     start: drift(home, end(home)),
     toMoon: fly([end(home), between(end(home), moon, 1.4, 0.45), moon], { look: 0.25, bank: 0.6 }),
     moon: drift(moon, end(moon, 0.06)),
-    toSurveyor3: fly([end(moon, 0.06), ...descend(sv, mC)], { bank: 0.4 }),
+    toSurveyor3: fly([end(moon, 0.06), ...descend(sv, mC)], { bank: 0 }),
     surveyor3: drift(sv, end(sv)),
-    toEagle: fly([end(sv), rise(end(sv), mC), ...descend(eagle, mC)], { bank: 0.4 }),
+    toEagle: hop(end(sv), eagle, mC),
     liftoff,
     eagle: drift(eagleWide, end(eagleWide)),
-    toLrv: fly([end(eagleWide), rise(end(eagleWide), mC), ...descend(lrv, mC)], { bank: 0.4 }),
+    toLrv: hop(end(eagleWide), lrv, mC),
     lrv: drift(lrv, end(lrv)),
-    toRetro: fly([end(lrv), rise(end(lrv), mC), ...descend(retro, mC)], { bank: 0.4 }),
+    toRetro: hop(end(lrv), retro, mC),
     retro: drift(retro, end(retro)),
     toEcho: fly([end(retro), rise(end(retro), mC, 1.2), echo], { look: 0.2 }),
     echo: drift(echo, end(echo, 0.04)),
     toMars: fly([end(echo, 0.04), between(end(echo, 0.04), mars, 18), mars], { look: 0.3, bank: 0.5 }),
     mars: drift(mars, end(mars, 0.06)),
-    toSojourner: fly([end(mars, 0.06), ...descend(soj, maC)], { bank: 0.4 }),
+    toSojourner: fly([end(mars, 0.06), ...descend(soj, maC)], { bank: 0 }),
     sojourner: drift(soj, end(soj)),
-    toOpportunity: fly([end(soj), rise(end(soj), maC), ...descend(opp, maC)], { bank: 0.4 }),
+    toOpportunity: hop(end(soj), opp, maC),
     opportunity: drift(opp, oppMid),
     dust: drift(oppMid, oppEnd),
     lastCall: drift(oppEnd, lastEnd),
-    toInsight: fly([lastEnd, rise(lastEnd, maC), ...descend(ins, maC)], { bank: 0.4 }),
+    toInsight: hop(lastEnd, ins, maC),
     insight: drift(ins, end(ins)),
-    toIngenuity: fly([end(ins), rise(end(ins), maC), ...descend(ing, maC)], { bank: 0.4 }),
+    toIngenuity: hop(end(ins), ing, maC),
     ingenuity: drift(ing, end(ing)),
     toDeep: fly([end(ing), rise(end(ing), maC, 1.6), between(end(ing), overview, 40), overview], { look: 0.3, bank: 0.4 }),
     deep: drift(overview, end(overview, 0.04)),
@@ -324,8 +346,31 @@ function reveal(el, k, out) {
 const lightOf = (id, lt) => (id === 'start' ? 0 : lt[id] ?? 0);
 const placeName = (id) => (id === 'start' ? t('body.earth') : id === 'moon' || id === 'mars' ? t(`body.${id}`) : stopName(id));
 const MILES = [10, 60, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 57600];
-function paintFlight(seg, u) {
+/** A hop across one world: real distance along the ground and the compass heading, from the two sites' coordinates. */
+const RADIUS_KM = { moon: 1737.4, mars: 3389.5 };
+const DIRS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
+function hopInfo(seg, i) {
+  const from = SEG.slice(0, i).reverse().find((s) => s.site)?.site;
+  const A = artifact(from).location, B = artifact(seg.site).location, r = Math.PI / 180;
+  const p1 = A.lat * r, p2 = B.lat * r, dl = (B.lon_east - A.lon_east) * r;
+  const ang = Math.acos(clamp(Math.sin(p1) * Math.sin(p2) + Math.cos(p1) * Math.cos(p2) * Math.cos(dl), -1, 1));
+  const brg = (Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / r + 360) % 360;
+  return { km: Math.round(ang * RADIUS_KM[seg.world] / 10) * 10, dir: DIRS[Math.round(brg / 45) % 8] };
+}
+function paintHop(box, seg, i, u) {
+  if (box.dataset.for !== seg.id) {
+    box.dataset.for = seg.id;
+    const { km, dir } = hopInfo(seg, i);
+    box.replaceChildren(h('p', { class: 'eyebrow' }, t('scroll.hop.next')),
+      h('p', { class: 'flight-clock hop-name' }, artifact(seg.site).name),
+      h('p', { class: 'flight-km' }, t(`scroll.hop.${seg.world}`, { km: fmtNumber(km), dir: t(`scroll.dir.${dir}`) })));
+  }
+  box.style.opacity = band(u, 0.06, 0.16) * (1 - band(u, 0.5, 0.6));
+}
+
+function paintFlight(seg, u, i) {
   const box = $('flight');
+  if (seg.hop) { box.dataset.mile = ''; paintHop(box, seg, i, u); return; }
   if (!seg.flight) { box.style.opacity = 0; box.dataset.mile = ''; return; }
   const lt = lightTimes(), a = lightOf(seg.flight[0], lt), b = lightOf(seg.flight[1], lt), to = seg.flight[1];
   if (box.dataset.for !== seg.id) {
@@ -430,13 +475,13 @@ function paint(y) {
   if (shownSeg !== seg.id) enterSeg(seg, i);
   if (shownCard !== seg.card) showCard(seg.card);
   if (cur?.el) {
-    const [a, b] = seg.cardIn ?? (seg.kind === 'move' ? [0.45, 0.95] : [0, 0.3]);
+    const [a, b] = seg.cardIn ?? (seg.hop ? [0.62, 0.98] : seg.kind === 'move' ? [0.45, 0.95] : [0, 0.3]);
     const k = SEG[i - 1]?.card === seg.card ? 1 : band(u, a, b);
     const out = SEG[i + 1]?.card === seg.card || i === SEG.length - 1 ? 0 : ease(band(u, 0.88, 1));
     reveal(cur.el, k, out);
     cur.el._tick?.(u);
   }
-  paintFlight(seg, u);
+  paintFlight(seg, u, i);
   paintRail(y, i);
   // sound: every level from where you are
   const engine = seg.id === 'liftoff' ? band(u, 0.1, 0.14) * (1 - band(u, 0.45, 0.75)) : 0;

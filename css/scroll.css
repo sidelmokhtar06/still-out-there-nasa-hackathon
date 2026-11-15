@@ -190,3 +190,7 @@ body.no-3d .rail-where { display: none; }
 .status-line .now { margin-inline-start: 10px; font-size: .8125rem; color: var(--muted); }
 .status-line .now::before { top: .5em; }
 .card-machine .info summary { opacity: .7; }
+
+/* the caption on a hop across one world: where to, how far, which way */
+.flight .hop-name { font-family: inherit; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 600; letter-spacing: -.02em; white-space: normal; }
+@media (max-width: 760px) { .flight .hop-name { font-size: 1.6rem; } }

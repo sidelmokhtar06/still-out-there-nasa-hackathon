@@ -55,5 +55,16 @@
   "scroll.now.opportunity": "Opportunity est le point dans le carré, vu par la caméra HiRISE en orbite le 20 septembre 2018, après la tempête. Il ne s'est jamais réveillé.",
   "scroll.now.insight": "InSight vu depuis l'orbite par la caméra HiRISE le 23 septembre 2019. On distingue ses deux panneaux solaires ronds.",
   "scroll.now.ingenuity": "Ingenuity sur son dernier terrain d'atterrissage, surnommé « Valinor Hills », photographié par le rover Perseverance le 4 février 2024 à environ 450 m.",
-  "scroll.boot.hook": "En ce moment, la lumière de la Terre met {moon} pour atteindre la Lune et {mars} pour atteindre Mars. C'est là que nous allons."
+  "scroll.boot.hook": "En ce moment, la lumière de la Terre met {moon} pour atteindre la Lune et {mars} pour atteindre Mars. C'est là que nous allons.",
+  "scroll.hop.next": "Prochaine étape",
+  "scroll.hop.moon": "{km} km à travers la Lune, direction {dir}",
+  "scroll.hop.mars": "{km} km à travers Mars, direction {dir}",
+  "scroll.dir.n": "nord",
+  "scroll.dir.ne": "nord-est",
+  "scroll.dir.e": "est",
+  "scroll.dir.se": "sud-est",
+  "scroll.dir.s": "sud",
+  "scroll.dir.sw": "sud-ouest",
+  "scroll.dir.w": "ouest",
+  "scroll.dir.nw": "nord-ouest"
 }

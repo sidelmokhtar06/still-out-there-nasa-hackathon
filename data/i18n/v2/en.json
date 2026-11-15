@@ -171,5 +171,16 @@
   "scroll.now.opportunity": "Opportunity is the blip in the square, seen by the HiRISE camera in orbit on 20 September 2018, after the dust storm had cleared. It never woke up.",
   "scroll.now.insight": "InSight seen from orbit by the HiRISE camera on 23 September 2019. You can make out its two round solar panels.",
   "scroll.now.ingenuity": "Ingenuity at its final airfield, nicknamed 'Valinor Hills', photographed by the Perseverance rover on 4 February 2024 from about 450 m away.",
-  "scroll.boot.hook": "Right now, light from Earth takes {moon} to reach the Moon and {mars} to reach Mars. That's where we're going."
+  "scroll.boot.hook": "Right now, light from Earth takes {moon} to reach the Moon and {mars} to reach Mars. That's where we're going.",
+  "scroll.hop.next": "Next stop",
+  "scroll.hop.moon": "{km} km across the Moon, heading {dir}",
+  "scroll.hop.mars": "{km} km across Mars, heading {dir}",
+  "scroll.dir.n": "north",
+  "scroll.dir.ne": "north-east",
+  "scroll.dir.e": "east",
+  "scroll.dir.se": "south-east",
+  "scroll.dir.s": "south",
+  "scroll.dir.sw": "south-west",
+  "scroll.dir.w": "west",
+  "scroll.dir.nw": "north-west"
 }
