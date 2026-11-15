@@ -31,6 +31,7 @@ export const MODELS = {
 };
 
 // Storybook layout (scene units). Not to scale.
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
 const BODIES = {
   earth: { pos: V(0, 0, 0), r: 1 },
   moon: { pos: V(6.5, 0.9, -8), r: 0.42 },
@@ -371,9 +372,10 @@ export function createUniverse(host, { onPick } = {}) {
       let hidden = tmp.z > 1 || Math.abs(tmp.x) > 1.05 || Math.abs(tmp.y) > 1.05;
       if (!hidden && L.body) {            // hide pins on the far side of a world
         const c = world[L.body].group.position, nrm = p.clone().sub(c).normalize(), toCam = camera.position.clone().sub(p).normalize();
-        hidden = nrm.dot(toCam) < 0.05;
+        hidden = nrm.dot(toCam) < 0.2;      // also on the very edge, where a pin looks like it floats in space
       }
       const x = (tmp.x * 0.5 + 0.5) * w, y = (-tmp.y * 0.5 + 0.5) * h;
+      if (y < (w < 760 ? 118 : 64)) hidden = true;                          // never under the top bar
       if (box && box.width && x > box.left - 16 && x < box.right + 16 && y > box.top - 16 && y < box.bottom + 16) hidden = true;
       // nudge labels that would sit on top of each other
       let flip = x > w * 0.7;
@@ -393,10 +395,10 @@ export function createUniverse(host, { onPick } = {}) {
   /** Where the camera should be for each kind of stop. */
   function shotFor(spec) {
     if (spec.kind === 'body') {
-      const b = BODIES[spec.body], w = world[spec.body];
+      const b = BODIES[spec.body];
       // look at the sunlit side, a little off-axis so the terminator shows
       const view = SUN_DIR.clone().applyAxisAngle(V(0, 1, 0), spec.body === 'earth' ? -0.9 : -0.75).normalize();
-      const dist = b.r * (spec.dist ?? 3.4);
+      const dist = b.r * (spec.dist ?? 3.4) * (w && w < 760 ? 1.75 : 1);     // phones: the whole world fits the width
       return { pos: b.pos.clone().add(view.multiplyScalar(dist)).add(V(0, b.r * 0.5, 0)), target: b.pos.clone(), up: V(0, 1, 0) };
     }
     if (spec.kind === 'machine') {
@@ -407,7 +409,7 @@ export function createUniverse(host, { onPick } = {}) {
         const side = SUN_DIR.clone().add(V(-0.6, 0.35, 0.4)).normalize();      // the lit side, a little off-axis
         return { pos: base.clone().add(side.multiplyScalar(m.size * 3.2)), target: base.clone(), up: V(0, 1, 0) };
       }
-      const w = world[m.body], c = w.group.position;
+      const c = world[m.body].group.position;
       const n = base.clone().sub(c).normalize();
       // stand on the ground a little away from the machine, eye slightly above it, with the horizon and space behind
       // "back": along the ground toward the Sun (so lit machines are lit from behind the camera);
@@ -416,8 +418,8 @@ export function createUniverse(host, { onPick } = {}) {
       if (back.lengthSq() < 1e-4) back = V(0, 1, 0).cross(n);
       back.normalize();
       const t = n.clone().cross(back).normalize();
-      // phones: step back a little, so the machine fits in the space above the card
-      const model = m.solid, k = (model ? 1 : 1.7) * (w && w < 760 ? 1.35 : 1);
+      // phones: the view is about half as wide as on a laptop, so stand back until the machine fits the space above the card
+      const model = m.solid, k = (model ? 1 : 1.7) * (w && w < 760 ? 1.85 : 1);
       const look = base.clone().add(n.clone().multiplyScalar(m.size * (model ? 0.3 : 0.5)));
       const pos = base.clone().add(back.clone().multiplyScalar(m.size * 1.7 * k)).add(t.clone().multiplyScalar(m.size * 0.9 * k)).add(n.clone().multiplyScalar(m.size * 0.55 * k));
       return { pos, target: look, up: n };
@@ -432,8 +434,8 @@ export function createUniverse(host, { onPick } = {}) {
         // the Moon both fit side by side in the strip above it
         return { pos: mid.clone().add(off.multiplyScalar(span * 2.4)).add(V(0, span * 0.35, 0)), target: mid, up: V(0, 1, 0) };
       }
-      const k = 1.55;
-      return { pos: mid.clone().add(off.multiplyScalar(span * k)).add(V(0, span * 0.3 * k / 1.55, 0)), target: mid, up: V(0, 1, 0) };
+      const k = 1.95;      // far enough back that Earth and the Moon both sit clear of the card and the rail
+      return { pos: mid.clone().add(off.multiplyScalar(span * k)).add(V(0, span * 0.3, 0)), target: mid, up: V(0, 1, 0) };
     }
     if (spec.kind === 'earthrise') {
       const e = BODIES.earth.pos, mo = BODIES.moon.pos, r = BODIES.moon.r;
@@ -497,7 +499,7 @@ export function createUniverse(host, { onPick } = {}) {
     // Machines are drawn far larger than life so you can see them, so neighbours hundreds of km apart would crowd
     // each other. At a machine, hide the others within 15° of it: in reality they are far over the horizon.
     for (const r of machines.values()) {
-      r.holder.visible = !m || !m.onWorld || !r.onWorld || r === m || r.body !== m.body || r.holder.position.angleTo(m.holder.position) > 0.26;
+      r.focusShow = !m || !m.onWorld || !r.onWorld || r === m || r.body !== m.body || r.holder.position.angleTo(m.holder.position) > 0.26;
     }
     if (!m) {
       // No machine: the old shadow map would land on whatever planet is near (a dark patch on Earth). Point a tiny
@@ -561,6 +563,19 @@ export function createUniverse(host, { onPick } = {}) {
   canvas.addEventListener('pointerdown', () => { canvas.dataset.drag = '1'; });
   addEventListener('pointerup', () => { delete canvas.dataset.drag; });
   let paused = false;
+  // Machines are drawn far larger than life so you can see them up close; from orbit they would float above the
+  // ground like satellites. So a machine on a world only shows when the camera is near it, growing in as you come down.
+  const nearPos = new THREE.Vector3();
+  function nearOnly() {
+    for (const r of machines.values()) {
+      const show = r.focusShow ?? true;
+      if (!r.onWorld) { r.holder.visible = show; continue; }
+      r.holder.getWorldPosition(nearPos);
+      const f = clamp01((16 * r.size - camera.position.distanceTo(nearPos)) / (7 * r.size));
+      r.holder.visible = show && f > 0;
+      r.holder.scale.setScalar(Math.max(1e-3, f * f * (3 - 2 * f)));
+    }
+  }
   function frame(t) {
     requestAnimationFrame(frame);
     if (document.hidden || paused) return;
@@ -578,6 +593,7 @@ export function createUniverse(host, { onPick } = {}) {
     }
     if (!dirty && !userMoving && !ambient) return;
     dirty = false;
+    nearOnly();
     sky.position.copy(camera.position); dome.position.copy(camera.position);
     renderer.render(scene, camera);
     placeLabels();

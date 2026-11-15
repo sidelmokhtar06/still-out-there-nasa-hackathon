@@ -208,3 +208,19 @@ body.no-3d .rail-where { display: none; }
 .linkish { background: none; border: 0; padding: 0; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .thumb.is-spot { position: relative; }
 .thumb.is-spot::after { content: "?"; position: absolute; top: 3px; inset-inline-end: 3px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #000; font: 700 .6875rem/1 var(--mono, monospace); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .6); z-index: 1; }
+
+/* place markers on the journey: a glowing dot, a short leader line, the name (no pill) */
+.label.pin i { width: 8px; height: 8px; margin: 3px; border: 0; background: var(--ink); box-shadow: 0 0 0 4px rgba(255, 255, 255, .14), 0 0 14px rgba(255, 255, 255, .55); animation: pin-glow 2.4s ease-in-out infinite; }
+.label.pin.status-still-working i { background: var(--accent); box-shadow: 0 0 0 4px rgba(255, 106, 61, .22), 0 0 14px var(--accent); }
+.label.pin span { position: relative; padding: 0 0 0 24px; border: 0; border-radius: 0; background: none; font-size: .8125rem; font-weight: 600; color: var(--ink); text-shadow: 0 1px 8px #000, 0 0 3px #000; }
+.label.pin span::before { content: ""; position: absolute; left: 2px; top: 50%; width: 16px; height: 1px; background: rgba(255, 255, 255, .55); }
+.label.pin.flip span { padding: 0 24px 0 0; }
+.label.pin.flip span::before { left: auto; right: 2px; }
+button.label.pin:hover span { background: none; color: var(--accent); }
+@keyframes pin-glow { 50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, .06), 0 0 18px rgba(255, 255, 255, .7); } }
+@media (prefers-reduced-motion: reduce) { .label.pin i { animation: none; } }
+
+/* desktop: the flight clock sits on the card's side, so the world you fly toward stays clear */
+@media (min-width: 761px) {
+  .flight { left: auto; inset-inline-start: var(--pad); transform: translateY(-50%); justify-items: start; text-align: start; }
+}

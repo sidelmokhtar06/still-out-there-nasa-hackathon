@@ -104,6 +104,20 @@ function between(a, b, lift, k = 0.5) {
   return { pos: V(a.pos).lerp(b.pos, k).add(vec(0, lift, 0)), target: V(b.target), up: vec(0, 1, 0) };
 }
 
+/** Between worlds: turn toward where you are going early (the world you leave slides out of view), then fly
+ *  straight at it, so it grows ahead of you and you arrive moving forward into the final view. No roll. */
+function cruise(a, b, turn = 0.35) {
+  const back = V(b.pos).sub(b.target).normalize(), D = a.pos.distanceTo(b.pos);
+  const c = V(b.pos).add(back.multiplyScalar(D * 0.45));          // a control point behind the final view
+  const f = (u) => {
+    const s = ease(u), o = 1 - s;
+    const pos = V(a.pos).multiplyScalar(o * o).add(V(c).multiplyScalar(2 * o * s)).add(V(b.pos).multiplyScalar(s * s));
+    const target = V(a.target).lerp(b.target, ease(band(u, 0, turn)));
+    U.pose(pos, target, V(a.up).lerp(b.up, ease(band(u, 0, turn))).normalize());
+  };
+  f.raw = true; f.ahead = () => null;
+  return f;
+}
 /** Across a world from one site to the next, the way a drone would: straight up, along the curve of the ground at a
  *  height that suits the distance, looking ahead at where it is going, then down to the next machine. The horizon stays
  *  level the whole way (no roll), so you always know which way is forward. */
@@ -134,7 +148,7 @@ function buildPoses() {
   const sv = M('surveyor3'), eagle = M('eagle'), lrv = M('lrv'), retro = M('retro');
   const soj = M('sojourner'), opp = M('opportunity'), ins = M('insight'), ing = M('ingenuity'), kep = M('kepler'), pio = M('pioneer10');
   const end = (s, k = 0.05) => pushIn(s, k);
-  const eagleWide = widen(eagle, 2.6, 1.1);
+  const eagleWide = innerWidth < 760 ? widen(eagle, 1.45, 0.5) : widen(eagle, 2.6, 1.1);   // phones already stand further back
   if (innerWidth < 760) eagleWide.target.lerp(eagle.target, 0.85);     // phones: aim at the lander, so it sits above the card
   const drift = (a, b) => { const f = U.path(a, b); f.raw = true; return f; };     // resting places: slow, constant speed
   const fly = (keys, o) => U.flight(keys, o);
@@ -152,7 +166,7 @@ function buildPoses() {
   const oppMid = end(opp, 0.08), oppEnd = end(opp, 0.22), lastEnd = end(oppEnd, 0.1);
   poses = {
     start: drift(home, end(home)),
-    toMoon: fly([end(home), between(end(home), moon, 1.4, 0.45), moon], { look: 0.25, bank: 0.6 }),
+    toMoon: cruise(end(home), moon),
     moon: drift(moon, end(moon, 0.06)),
     toSurveyor3: fly([end(moon, 0.06), ...descend(sv, mC)], { bank: 0 }),
     surveyor3: drift(sv, end(sv)),
@@ -165,7 +179,7 @@ function buildPoses() {
     retro: drift(retro, end(retro)),
     toEcho: fly([end(retro), rise(end(retro), mC, 1.2), echo], { look: 0.2 }),
     echo: drift(echo, end(echo, 0.04)),
-    toMars: fly([end(echo, 0.04), between(end(echo, 0.04), mars, 18), mars], { look: 0.3, bank: 0.5 }),
+    toMars: cruise(end(echo, 0.04), mars, 0.3),
     mars: drift(mars, end(mars, 0.06)),
     toSojourner: fly([end(mars, 0.06), ...descend(soj, maC)], { bank: 0 }),
     sojourner: drift(soj, end(soj)),
@@ -455,8 +469,8 @@ function paint(y) {
   if (seg.kind === 'flight' && !reduced()) {
     const k = band(u, 0.06, 0.25) * (1 - band(u, 0.75, 0.94));
     U.streaks(u * seg.vh * 80, k);
-    U.pulse(pose.ahead(u), band(u, 0.03, 0.12) * (1 - band(u, 0.82, 0.95)));
-  } else { U.streaks(0, 0); U.pulse(null); }
+  } else U.streaks(0, 0);
+  U.pulse(null);
   const fr = seg.frame ?? (seg.card === 'finale' ? 'right' : seg.card === 'start' ? 'none' : 'left');
   U.frame(fr);
   document.body.classList.toggle('card-right', fr === 'right' && seg.kind === 'hold');   // the rail steps aside for a right-hand card
