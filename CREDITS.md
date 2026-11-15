@@ -50,6 +50,8 @@ Each links to https://images.nasa.gov/details/&lt;NASA ID&gt;. Photos are resize
 | InSight | The Best View of InSight (HiRISE, 23 Sept 2019), PIA23376 | NASA/JPL-Caltech/University of Arizona, https://images.nasa.gov/details/PIA23376 |
 | Ingenuity | Perseverance Spots Ingenuity at Its Final Airfield (4 Feb 2024), PIA26236 | NASA/JPL-Caltech/ASU/MSSS, https://images.nasa.gov/details/PIA26236 |
 
+For the "Can you spot it?" game (`assets/img/now/spot/`), the Eagle, Lunar Roving Vehicle and Apollo 14 images have NASA's labels and arrows painted out with surrounding ground, and the InSight image is cropped to leave out its zoomed inset. The machines themselves are not touched, and the original labelled image is shown right after each guess.
+
 ## Sounds (trimmed, converted to mono MP3, volume normalised)
 | Machine | What | Credit / source |
 |---|---|---|

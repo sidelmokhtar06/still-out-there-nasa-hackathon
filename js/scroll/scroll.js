@@ -14,7 +14,7 @@ import { lightTimes, clock, kmOf } from '../reach.js';
 import { daysSince } from '../live.js';
 import { soundOn, setSound, mix, captions, SOUND_FILES } from './sound.js';
 import { preload, asset } from './preload.js';
-import { NOW_FILES, nowOf } from './now.js';
+import { NOW_FILES, nowOf, spotOf } from './now.js';
 import { layerOpen, closeLayer, showStory, showPhoto, showSources } from './layers.js';
 
 const $ = (id) => document.getElementById(id);
@@ -296,8 +296,8 @@ function addTodayAndScience(el, id) {
   if (voice) voice.after(learned); else el.querySelector('.actions')?.before(learned);
   const now = nowOf(id), actions = el.querySelector('.actions');
   if (now && actions) {
-    actions.append(h('button', { type: 'button', class: 'thumb thumb-now', onclick: (e) => showPhoto(artifact(id), { x: e.clientX, y: e.clientY }, 'now'), 'aria-label': t('scroll.now.title') },
-      h('img', { src: now.src, alt: '' }), h('span', {}, t('scroll.now.title'), ' ↗')));
+    actions.append(h('button', { type: 'button', class: spotOf(id) ? 'thumb thumb-now is-spot' : 'thumb thumb-now', onclick: (e) => showPhoto(artifact(id), { x: e.clientX, y: e.clientY }, 'now'), 'aria-label': t('scroll.now.title') },
+      h('img', { src: now.src, alt: '' }), h('span', {}, t(spotOf(id) ? 'scroll.spot.btn' : 'scroll.now.title'), ' ↗')));
   } else if (!now) {
     learned.after(h('p', { class: 'now-far' }, t('scroll.now.far')));
   }

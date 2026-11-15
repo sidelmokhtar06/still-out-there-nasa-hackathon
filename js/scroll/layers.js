@@ -2,11 +2,11 @@
 // (one #layer, as on the classic site), plus the signal you send at the start and its payoff at the finale.
 // Adapted from js/app.js so the classic page keeps working unchanged.
 import { h, statusMark } from '../v1/dom.js';
-import { t, lang } from '../i18n.js';
+import { t, lang, fmtNumber } from '../i18n.js';
 import { db } from '../data.js';
 import { openStory, imageOf } from '../story.js';
 import { lightTimes, clock, kmOf } from '../reach.js';
-import { nowOf } from './now.js';
+import { nowOf, spotOf } from './now.js';
 
 const $ = (id) => document.getElementById(id);
 const gsap = globalThis.gsap;
@@ -46,6 +46,7 @@ export function showStory(id, start, order, onClose) {
 
 /** The real photos of machine a: on the surface (then) and where it is today (now), with a switch between them.
  *  from = {x, y}: the screen point it grows out of (where you tapped). which: 'then' or 'now'. */
+const found = new Set();      // machines already spotted (or shown) this visit: next time, straight to the photo
 export function showPhoto(a, from, which = 'then') {
   const img = imageOf(a), now = nowOf(a.id);
   if (!img && !now) return;
@@ -54,20 +55,51 @@ export function showPhoto(a, from, which = 'then') {
     now: now && { src: now.src, alt: t(`scroll.now.${a.id}`), caption: t(`scroll.now.${a.id}`), credit: now.credit, cls: now.wide ? 'wide' : '' },
   };
   if (!views[which]) which = views.then ? 'then' : 'now';
+  const spot = which === 'now' && !found.has(a.id) ? spotOf(a.id) : null;
   openLayer((layer) => {
-    const pic = h('img', {}), cap = h('figcaption', {});
+    const pic = h('img', {}), cap = h('figcaption', {}), frame = h('div', { class: 'photo-frame' }, pic);
     const tabs = views.then && views.now ? h('div', { class: 'seg photo-tabs', role: 'group', 'aria-label': t('scroll.now.title') },
       ['then', 'now'].map((k) => h('button', { type: 'button', 'data-k': k, onclick: () => show(k) }, t(k === 'then' ? 'scroll.now.then' : 'scroll.now.title')))) : null;
     function show(k) {
       const v = views[k];
+      frame.className = 'photo-frame'; frame.style.removeProperty('--ar'); frame.onclick = null;
+      for (const m of frame.querySelectorAll('.spot-mark')) m.remove();
+      if (tabs) tabs.hidden = false;
       pic.src = v.src; pic.alt = v.alt; pic.className = v.cls;
       cap.replaceChildren(v.caption, ' ', h('span', { class: 'muted' }, t('media.credit', { credit: v.credit })));
       for (const b of tabs?.children ?? []) b.setAttribute('aria-pressed', String(b.dataset.k === k));
     }
+    // "Can you spot it?": the orbital photo without its labels; tap where you think the machine is
+    function play() {
+      if (tabs) tabs.hidden = true;
+      frame.className = 'photo-frame is-spot'; frame.style.setProperty('--ar', spot.ar);
+      pic.src = spot.src; pic.alt = t('scroll.spot.alt', { name: a.name }); pic.className = '';
+      const skip = h('button', { type: 'button', class: 'linkish', onclick: () => reveal(null) }, t('scroll.spot.show'));
+      cap.replaceChildren(h('strong', {}, t('scroll.spot.ask', { name: a.name })), ' ', t('scroll.spot.how'), ' ', skip);
+      frame.onclick = (e) => {
+        const r = pic.getBoundingClientRect();
+        reveal({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+      };
+    }
+    function reveal(tap) {
+      frame.onclick = null; frame.classList.add('is-shown'); found.add(a.id);
+      const at = (p, cls) => h('i', { class: `spot-mark ${cls}`, style: `left:${p.x * 100}%;top:${p.y * 100}%`, 'aria-hidden': 'true' });
+      frame.append(at(spot, 'spot-ring'));
+      let verdict = '';
+      if (tap) {
+        frame.append(at(tap, 'spot-tap'));
+        const w = pic.naturalWidth || 1, hh = pic.naturalHeight || 1;
+        const px = Math.hypot((tap.x - spot.x) * w, (tap.y - spot.y) * hh);
+        verdict = px < w * 0.045 ? t('scroll.spot.yes')
+          : spot.mpp ? t(px < w * 0.15 ? 'scroll.spot.miss' : 'scroll.spot.missBig', { m: fmtNumber(Math.round(px * spot.mpp / 10) * 10 || 10) }) : t('scroll.spot.missFar');
+      }
+      cap.replaceChildren(verdict ? h('strong', {}, verdict, ' ') : '', t(`scroll.spot.${a.id}`), ' ',
+        h('button', { type: 'button', class: 'linkish', onclick: () => show('now') }, t('scroll.spot.labels')));
+    }
     layer.replaceChildren(h('div', { class: 'lightbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': a.name },
       h('button', { type: 'button', class: 'icon-btn lightbox-close', 'aria-label': t('sources.close'), onclick: closeLayer }, '×'),
-      h('figure', {}, tabs, pic, cap)));
-    show(which);
+      h('figure', {}, tabs, frame, cap)));
+    if (spot) play(); else show(which);
     layer.querySelector('.lightbox-close').focus();
     if (from && !reduced()) {
       const fig = layer.querySelector('figure'), r = fig.getBoundingClientRect();

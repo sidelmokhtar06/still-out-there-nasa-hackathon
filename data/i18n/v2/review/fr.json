@@ -66,5 +66,19 @@
   "scroll.dir.s": "sud",
   "scroll.dir.sw": "sud-ouest",
   "scroll.dir.w": "ouest",
-  "scroll.dir.nw": "nord-ouest"
+  "scroll.dir.nw": "nord-ouest",
+  "scroll.spot.btn": "Sauras-tu le trouver ?",
+  "scroll.spot.ask": "Sauras-tu trouver {name} ?",
+  "scroll.spot.how": "Voici une vraie photo prise depuis l'orbite. Touche l'endroit où tu penses qu'il se trouve.",
+  "scroll.spot.alt": "Photo prise depuis l'orbite, avec {name} quelque part",
+  "scroll.spot.show": "Montre-moi",
+  "scroll.spot.yes": "Trouvé !",
+  "scroll.spot.miss": "Presque ! Tu étais à {m} m.",
+  "scroll.spot.missFar": "Pas tout à fait. Le voici.",
+  "scroll.spot.labels": "Voir la photo annotée par la NASA →",
+  "scroll.spot.eagle": "Le point brillant avec une ombre sombre est la moitié basse d'Eagle, toujours là où elle s'est posée en 1969.",
+  "scroll.spot.lrv": "La tache sombre au bout de la longue ligne est le rover, garé là où les astronautes l'ont laissé. La ligne est la trace qu'ils ont laissée.",
+  "scroll.spot.retro": "Le minuscule point brillant est la station scientifique ; le miroir laser en fait partie. Le chemin sombre est la trace des pas des astronautes.",
+  "scroll.spot.insight": "Le minuscule point bleu-vert est InSight. La tache sombre autour est l'endroit où ses fusées d'atterrissage ont soufflé la poussière.",
+  "scroll.spot.missBig": "Pas tout à fait : tu étais à {m} m."
 }

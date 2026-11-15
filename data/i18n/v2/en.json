@@ -182,5 +182,19 @@
   "scroll.dir.s": "south",
   "scroll.dir.sw": "south-west",
   "scroll.dir.w": "west",
-  "scroll.dir.nw": "north-west"
+  "scroll.dir.nw": "north-west",
+  "scroll.spot.btn": "Can you spot it?",
+  "scroll.spot.ask": "Can you spot {name}?",
+  "scroll.spot.how": "This is a real photo from orbit. Tap where you think it is.",
+  "scroll.spot.alt": "Photo from orbit with {name} somewhere in it",
+  "scroll.spot.show": "Show me",
+  "scroll.spot.yes": "You found it!",
+  "scroll.spot.miss": "Close! You were {m} m away.",
+  "scroll.spot.missFar": "Not quite. Here it is.",
+  "scroll.spot.labels": "See NASA's labelled photo →",
+  "scroll.spot.eagle": "The bright speck with a dark shadow is Eagle's bottom half, still where it landed in 1969.",
+  "scroll.spot.lrv": "The dark spot at the end of the long line is the rover, parked where the astronauts left it. The line is the trail they left behind.",
+  "scroll.spot.retro": "The tiny bright dot is the science station; the laser mirror is part of it. The dark path is the trail the astronauts walked.",
+  "scroll.spot.insight": "The tiny blue-green speck is InSight. The dark patch around it is where its landing rockets blew the dust away.",
+  "scroll.spot.missBig": "Not quite: you were {m} m away."
 }

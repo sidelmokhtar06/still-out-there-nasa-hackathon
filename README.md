@@ -23,6 +23,8 @@ Everything you see is lit as it is **right now**. Earth, the Moon and Mars are t
 - The rail on the side shows where you are; click a dot to fly there.
 - Every stop has its own address (`#/opportunity`, `#/opportunity/story/3`), so links, Back and reloads all work.
 - Flights between worlds show the real light-travel time; the flight to Mars is long on purpose.
+- Hops between machines on the same world fly low across the ground; the caption gives the real distance and compass heading from the two landing sites.
+- Tap a machine for its real photo. On Eagle, the rover, the Apollo 14 mirror and InSight, the "?" photo is a game: find the machine in the real orbital image (labels painted out), then see how many metres off you were and NASA's labelled original.
 - Sound (music, real NASA recordings, captions for the Apollo 11 lift-off) starts with the sound button.
 - `classic.html` keeps the earlier step-by-step version (Next button and Map).
 - **Watch a 2-minute tour** (on the first screen, or `index.html?tour`) scrolls itself through the highlights; any scroll, tap or key stops it.
