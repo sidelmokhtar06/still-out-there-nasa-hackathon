@@ -173,3 +173,13 @@ body.no-3d .rail-where { display: none; }
 
 /* ---- the loading screen's hook ---- */
 .boot-hook { max-width: 30em; margin: 0; padding-inline: 16px; text-align: center; font-size: .9375rem; line-height: 1.45; color: var(--ink-2); min-height: 1.4em; }
+
+/* ---- phones: shorter machine cards, so the machine stays in view above them ---- */
+@media (max-width: 760px) {
+  .card-machine .voice-line { display: none; }        /* the quote is still read aloud by Listen */
+  .card-machine { gap: 10px; }
+  .card-machine h1 { font-size: 2.1rem; }
+  .card-machine .now { font-size: .8125rem; }
+  .learned { padding: 8px 12px; font-size: .875rem; }
+  .card-machine .info { display: none; }              /* model notes stay in the full story and on desktop */
+}
