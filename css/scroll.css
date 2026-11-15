@@ -53,6 +53,8 @@ html { scroll-snap-type: y proximity; }
 .rail a.is-past i { background: var(--ink); border-color: var(--ink); }
 .rail a.is-here i { background: var(--accent); border-color: var(--accent); transform: scale(1.35); }
 .rail a.is-here { color: var(--ink); }
+.rail, .rail-where { transition: opacity .4s; }
+.card-right .rail, .card-right .rail-where { opacity: 0; pointer-events: none; }
 
 .gauge-ticks span:last-child { transform: translateX(-100%); }
 [dir="rtl"] .gauge-ticks span:last-child { transform: translateX(100%); }

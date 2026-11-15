@@ -496,7 +496,15 @@ export function createUniverse(host, { onPick } = {}) {
     for (const r of machines.values()) {
       r.holder.visible = !m || !m.onWorld || !r.onWorld || r === m || r.body !== m.body || r.holder.position.angleTo(m.holder.position) > 0.26;
     }
-    if (!m) { spot.intensity = 0; sun.shadow.autoUpdate = false; sunTarget.position.set(0, 0, 0); sun.position.copy(SUN_DIR).multiplyScalar(50); return; }
+    if (!m) {
+      // No machine: the old shadow map would land on whatever planet is near (a dark patch on Earth). Point a tiny
+      // shadow box at empty space and redraw it once, so the map is empty and nothing is shaded.
+      spot.intensity = 0; sun.shadow.autoUpdate = false; sunTarget.position.set(0, 0, 0); sun.position.copy(SUN_DIR).multiplyScalar(50);
+      Object.assign(sun.shadow.camera, { left: -1e-4, right: 1e-4, top: 1e-4, bottom: -1e-4, near: 0.001, far: 0.002 });
+      sun.shadow.camera.updateProjectionMatrix();
+      sun.shadow.needsUpdate = true; dirty = true;
+      return;
+    }
     const p = worldPos(m.holder);
     // aim the shadow box at this machine. The light stands far enough back along the Sun's direction that the world
     // itself falls inside it: at a site where the Sun is down right now, the planet shades the machine.

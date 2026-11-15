@@ -412,7 +412,9 @@ function paint(y) {
     U.streaks(u * seg.vh * 80, k);
     U.pulse(pose.ahead(u), band(u, 0.03, 0.12) * (1 - band(u, 0.82, 0.95)));
   } else { U.streaks(0, 0); U.pulse(null); }
-  U.frame(seg.frame ?? (seg.card === 'finale' ? 'right' : seg.card === 'start' ? 'none' : 'left'));
+  const fr = seg.frame ?? (seg.card === 'finale' ? 'right' : seg.card === 'start' ? 'none' : 'left');
+  U.frame(fr);
+  document.body.classList.toggle('card-right', fr === 'right' && seg.kind === 'hold');   // the rail steps aside for a right-hand card
 
   // Eagle's top half: on the lander until lift-off, gone after
   const iL = IDX.liftoff;
