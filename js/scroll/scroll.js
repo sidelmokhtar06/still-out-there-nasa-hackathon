@@ -15,7 +15,7 @@ import { daysSince } from '../live.js';
 import { soundOn, setSound, mix, captions, SOUND_FILES } from './sound.js';
 import { preload, asset } from './preload.js';
 import { NOW_FILES, nowOf } from './now.js';
-import { layerOpen, closeLayer, showStory, showPhoto, showSources, holdButton, paintSignal, paintPayoff } from './layers.js';
+import { layerOpen, closeLayer, showStory, showPhoto, showSources } from './layers.js';
 
 const $ = (id) => document.getElementById(id);
 const gsap = globalThis.gsap;
@@ -194,7 +194,6 @@ function startCard() {
     h('p', { class: 'eyebrow', id: 'now-line' }, nowLine()),
     h('h1', {}, t('app.title')),
     h('p', { class: 'tagline' }, t('start.line')),
-    h('div', { class: 'send' }, holdButton(() => goTo('moon'))),
     h('div', { class: 'start-row' },
       h('p', { class: 'cue' }, h('i', { 'aria-hidden': 'true' }), t('scroll.cue')),
       h('button', { type: 'button', class: 'btn btn-tour', onclick: startTour }, '▶ ', t('scroll.tour'))));
@@ -526,7 +525,7 @@ function showCard(card) {
   document.body.classList.toggle('is-center', !!cur?.center);
   document.body.classList.toggle('is-side', !!cur?.side);
   if (card !== 'liftoff') $('bigtype').hidden = true;
-  if (card === 'finale') { roll = rollCall($('rollcall-mount')); paintPayoff(new Date()); }
+  if (card === 'finale') roll = rollCall($('rollcall-mount'));
 }
 
 function paintRail(y, i) {
@@ -696,10 +695,10 @@ function textJourney() {
   $('card').replaceChildren(h('div', { class: 'text-journey' }, intro, ...sections));
   buildChrome();
   addEventListener('hashchange', () => route());
-  roll = rollCall($('rollcall-mount')); paintPayoff(new Date());
+  roll = rollCall($('rollcall-mount'));
   route(true);
   $('boot').remove();
-  setInterval(() => { if (document.hidden) return; const now = new Date(); for (const s of document.querySelectorAll('.tj-stop')) tickStop(s, now); roll?.tick(now); paintSignal(now); }, 1000);
+  setInterval(() => { if (document.hidden) return; const now = new Date(); for (const s of document.querySelectorAll('.tj-stop')) tickStop(s, now); roll?.tick(now); }, 1000);
 }
 
 // ---- the tour: a two-minute guided scroll through the highlights -------------------------------------
@@ -795,14 +794,12 @@ async function start() {
   if (reduced()) boot.remove(); else gsap.to(boot, { opacity: 0, duration: 0.9, onComplete: () => boot.remove() });
   setTimeout(() => boot.remove(), 1500);      // the fade slows down on weak devices; never leave the curtain up
   if (new URLSearchParams(location.search).has('tour')) setTimeout(startTour, 800);
-  paintSignal();
   setInterval(() => {
     if (document.hidden) return;
     const now = new Date();
     if (cur?.el) tickStop(cur.el, now);
     const nl = $('now-line'); if (nl) nl.textContent = nowLine(now);
     roll?.tick(now);
-    paintSignal(now);
   }, 1000);
   setInterval(() => { U.updateSun(new Date()); buildPoses(); painted = null; }, 60e3);
 }

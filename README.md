@@ -12,7 +12,7 @@ Everything you see is lit as it is **right now**. Earth, the Moon and Mars are t
 
 | Chapter | Stops |
 |---|---|
-| Start | Hold to send a real signal at light speed. Its progress shows in the top bar, and the finale tells you when it reaches Pioneer 10. |
+| Start | The date and time right now, then scroll to leave Earth (or watch the 2-minute tour). |
 | 1 · The Moon | Overview → Surveyor 3 → Eagle → Lunar Roving Vehicle → Apollo 14 mirror → **the echo** (fire a laser at the mirror; the round trip takes real time) |
 | 2 · Mars | Overview → Sojourner → Opportunity → **the dust storm** (the sky darkens; tau goes from 0.5 to 10.8) → InSight (real marsquake audio) → Ingenuity (real flight audio) |
 | 3 · Deep space | Overview with live light times → Kepler → Pioneer 10 |
@@ -53,7 +53,7 @@ index.html  css/universe.css css/scroll.css      the scroll journey (main page)
 js/scroll/scroll.js    the track: sections, camera moves, cards, readouts, all driven by the scroll
 js/scroll/universe.js  the 3D scene with scroll-scrubbed flights, Mars sky, dust storm, Eagle's lift-off
 js/scroll/sound.js     music and real recordings mixed from the scroll position
-js/scroll/layers.js    story / photo / sources overlays, the signal you send
+js/scroll/layers.js    story / photo / sources overlays
 classic.html  js/app.js js/universe.js  the earlier step-by-step version
 assets/audio/music/    background music loops; assets/audio/scroll/ real NASA recordings (see CREDITS.md)
 js/stops.js      the 18 stops: camera shot, floating labels, card of words

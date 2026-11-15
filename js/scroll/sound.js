@@ -16,14 +16,10 @@ const band = (u, a, b) => clamp((u - a) / (b - a));
 const REAL = { ascent: 'apollo11-ascent-onboard', cruise: 'perseverance-cruise-loop', wind: 'mars-wind-sol4-loop', devil: 'mars-dust-devil' };
 /** Every sound file the journey plays (for the loading screen). */
 export const SOUND_FILES = [...['moon', 'mars', 'deep'].map((w) => `assets/audio/music/${w}.mp3`), ...Object.values(REAL).map((n) => `assets/audio/scroll/${n}.mp3`)];
-// Captions for the lift-off clip, in NASA's own words (Apollo Lunar Surface Journal, 124:21:54 to 124:22:15 GET).
+// Captions for the lift-off clip, in NASA's own words (Apollo Lunar Surface Journal, 124:21:54 to 124:22:08 GET).
 const CAPTIONS = [
   [0.3, 9.6, 'Aldrin', '9, 8, 7, 6, 5, Abort Stage, Engine Arm, Ascent, Proceed.'],
-  [9.6, 13.4, 'Aldrin', 'We’re off. Look at that stuff go all over the place.'],
-  [13.4, 15.2, 'Aldrin', 'Look at that shadow. Beautiful.'],
-  [15.2, 17.3, 'Aldrin', '26, 36 feet per second up.'],
-  [17.3, 19.5, 'Armstrong', 'The Eagle has wings.'],
-  [28.8, 31, 'Aldrin', 'Very quiet ride.'],
+  [9.6, 13.8, 'Aldrin', 'We’re off. Look at that stuff go all over the place.'],
 ];
 
 let ctx = null, nodes = null, last = null, lastMile = '', lastCall = false;
