@@ -5,6 +5,8 @@
 // Music is the site's per-world loops (assets/audio/music/). A little generated noise is kept underneath:
 // a short thump at ignition, radio static on the Moon flight, and some high wind so the storm is still
 // audible on small speakers (real Mars wind is almost all below 100 Hz).
+import { asset } from './preload.js';
+
 const KEY = 'still-out-there-v2:scroll-sound';
 const LOOP_S = { moon: 6779977 / 44100, mars: 9400612 / 44100, deep: 4310265 / 44100 };   // assets/audio/music/, exact loop lengths
 const MUSIC = 0.2;                       // same level as the classic journey's music
@@ -12,6 +14,8 @@ const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const band = (u, a, b) => clamp((u - a) / (b - a));
 
 const REAL = { ascent: 'apollo11-ascent-onboard', cruise: 'perseverance-cruise-loop', wind: 'mars-wind-sol4-loop', devil: 'mars-dust-devil' };
+/** Every sound file the journey plays (for the loading screen). */
+export const SOUND_FILES = [...['moon', 'mars', 'deep'].map((w) => `assets/audio/music/${w}.mp3`), ...Object.values(REAL).map((n) => `assets/audio/scroll/${n}.mp3`)];
 // Captions for the lift-off clip, in NASA's own words (Apollo Lunar Surface Journal, 124:21:54 to 124:22:15 GET).
 const CAPTIONS = [
   [0.3, 9.6, 'Aldrin', '9, 8, 7, 6, 5, Abort Stage, Engine Arm, Ascent, Proceed.'],
@@ -68,7 +72,7 @@ async function build() {
     const g = gainOf();
     g.connect(muffle);
     loops[w] = g;
-    fetch(`assets/audio/music/${w}.mp3`).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).then((b) => {
+    fetch(asset(`assets/audio/music/${w}.mp3`)).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).then((b) => {
       const s = ctx.createBufferSource(), offset = b.duration > LOOP_S[w] + 0.02 ? 1105 / 44100 : 0;
       s.buffer = b; s.loop = true; s.loopStart = offset; s.loopEnd = Math.min(offset + LOOP_S[w], b.duration);
       s.connect(g); s.start(0, offset);
@@ -77,7 +81,7 @@ async function build() {
   // real recordings: two loops whose levels follow the scroll, two one-shots
   const buffers = {}, real = { cruise: gainOf(), wind: gainOf() };
   real.cruise.connect(out); real.wind.connect(out);
-  await Promise.all(Object.entries(REAL).map(([k, name]) => fetch(`assets/audio/scroll/${name}.mp3`)
+  await Promise.all(Object.entries(REAL).map(([k, name]) => fetch(asset(`assets/audio/scroll/${name}.mp3`))
     .then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).then((b) => { buffers[k] = b; })
     .catch((err) => console.warn('sound unavailable', name, err))));
   for (const k of ['cruise', 'wind']) {

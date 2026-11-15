@@ -27,5 +27,10 @@
   "scroll.model.insight": "Modèle 3D de la NASA (NASA 3D Resources), placé sur son vrai site. Il montre InSight avant que son bras ne dépose le sismomètre et la sonde de chaleur sur le sol.",
   "scroll.model.built": "La NASA n'a pas publié de modèle 3D de cette machine : nous en avons construit un simplifié à partir de photos et de dimensions publiées par la NASA. La photo, elle, est la vraie.",
   "scroll.model.surveyor3": "La NASA n'a pas publié de modèle 3D de Surveyor 3 : nous en avons construit un simplifié à partir de photos et de dimensions publiées par la NASA. Sa caméra et sa pelle manquent exprès : les astronautes d'Apollo 12 les ont rapportées en 1969.",
-  "scroll.seePhoto": "Voir la vraie photo"
+  "scroll.seePhoto": "Voir la vraie photo",
+  "scroll.boot.download": "Téléchargement de la Lune, de Mars et des machines…",
+  "scroll.boot.prepare": "Préparation…",
+  "scroll.no3d": "Ce navigateur ne peut pas afficher le voyage en 3D : voici les machines sous forme de page. Tout le reste (récits, vraies photos, heures en direct) fonctionne.",
+  "scroll.tour": "Voir une visite de 2 minutes",
+  "scroll.stopTour": "Arrêter la visite"
 }

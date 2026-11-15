@@ -127,3 +127,24 @@ html:has(body.layer-open) { overflow: hidden; }
 body.over-machine { cursor: pointer; }
 .pick-hint { position: fixed; z-index: 30; left: 0; top: 0; margin: 0; padding: 4px 10px; border-radius: 999px; pointer-events: none;
   background: rgba(0, 0, 0, .7); border: 1px solid var(--line); font-size: .75rem; color: var(--ink); white-space: nowrap; }
+
+/* ---- the loading screen: real progress, opens only when everything is ready ---- */
+.boot-full { gap: 14px; }
+.boot-title { font-size: clamp(2rem, 6vw, 3.4rem); font-weight: 600; letter-spacing: -.04em; color: var(--ink); margin: 6px 0 0; }
+.boot-full .boot-text { min-height: 1.4em; text-align: center; padding-inline: 16px; }
+.boot-bar { width: min(320px, 70vw); height: 3px; border-radius: 3px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.boot-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ink), var(--accent)); transform-origin: left; transform: scaleX(0); transition: transform .25s linear; }
+[dir="rtl"] .boot-bar i { transform-origin: right; }
+.boot-meta { display: flex; gap: 12px; font-family: var(--mono); font-size: .75rem; color: var(--muted); }
+
+/* ---- the tour ---- */
+.btn-tour { gap: 6px; }
+html.touring { scroll-snap-type: none; }
+.tour-stop { position: fixed; z-index: 40; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); transform: translateX(-50%); background: rgba(0, 0, 0, .7); }
+
+/* ---- no 3D: the journey as a plain page of cards ---- */
+body.no-3d .space, body.no-3d .vignette, body.no-3d .rail, body.no-3d #sound-btn, body.no-3d .flight, body.no-3d .dust-veil { display: none; }
+body.no-3d .card-host { position: static; width: auto; max-height: none; transform: none; }
+.text-journey { display: grid; gap: 72px; max-width: 640px; margin: 0 auto; padding: 110px 16px 80px; }
+.text-journey .card { opacity: 1; }
+.tj-stop { scroll-margin-top: 90px; padding-top: 24px; border-top: 1px solid var(--line); }

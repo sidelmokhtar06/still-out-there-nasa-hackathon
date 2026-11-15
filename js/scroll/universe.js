@@ -13,6 +13,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { marsState } from '../time/marsTime.js';
 import { moonSubsolar } from '../time/moonTime.js';
 import { BUILT } from './models.js';
+import { asset } from './preload.js';
 
 const RAD = Math.PI / 180;
 const gsap = globalThis.gsap;
@@ -38,6 +39,12 @@ const BODIES = {
 const DEEP = { kepler: V(45, -3, -230), pioneer10: V(-25, 14, -420) };
 const SUN_DIR = V(1, 0.08, 0.55).normalize();
 const STORM_SKY = new THREE.Color(0x3a2414);
+
+// Planet and sky maps (WebP, except the cloud layer which is smaller as JPEG). Phones and small or low-memory
+// devices get the 2K versions (a quarter of the pixels). The loading screen downloads exactly these.
+export const MAPS = { stars: 'assets/maps/stars.webp', clouds: 'assets/maps/earth-clouds.jpg', earth: 'assets/maps/earth.webp', moon: 'assets/maps/moon.webp', mars: 'assets/maps/mars.webp' };
+const small = Math.min(screen.width, screen.height) < 800 || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+export const mapSrc = (url) => (small ? url.replace('assets/maps/', 'assets/maps/2k/') : url);
 
 /** Latitude/longitude → unit vector in a body's own frame (matches three.js sphere UVs). */
 export function lonLat(lat, lon) {
@@ -104,11 +111,11 @@ export function createUniverse(host, { onPick } = {}) {
   const bitmaps = typeof createImageBitmap === 'function' && !/^((?!chrome|android).)*safari/i.test(navigator.userAgent)
     ? new THREE.ImageBitmapLoader().setOptions({ imageOrientation: 'flipY' }) : null;
   // Phones and small windows get 2K maps (a quarter of the pixels); big screens get 4K.
-  const small = Math.min(screen.width, screen.height) < 800 || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+
   const pending = new Map();            // file name → promise, for the loading screen
   const load = (url, srgb = true) => {
-    const src = small ? url.replace('assets/maps/', 'assets/maps/2k/') : url;
-    let ok; const p = new Promise((r) => { ok = r; }); pending.set(url.split('/').pop().replace('.jpg', ''), p);
+    const src = asset(mapSrc(url));
+    let ok; const p = new Promise((r) => { ok = r; }); pending.set(url.split('/').pop().replace(/\.(jpg|webp)$/, ''), p);
     const t = new THREE.Texture();
     if (srgb) t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 4;
@@ -133,7 +140,7 @@ export function createUniverse(host, { onPick } = {}) {
   scene.add(sun, hemi, spot);
 
   // ---- sky -----------------------------------------------------------------------------
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2400, 40, 20), new THREE.MeshBasicMaterial({ map: load('assets/maps/stars.jpg'), side: THREE.BackSide, color: 0x7a7a7a, depthWrite: false }));
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2400, 40, 20), new THREE.MeshBasicMaterial({ map: load(MAPS.stars), side: THREE.BackSide, color: 0x7a7a7a, depthWrite: false }));
   sky.renderOrder = -1;
   scene.add(sky);
   const dome = new THREE.Mesh(new THREE.SphereGeometry(2300, 32, 16), new THREE.MeshBasicMaterial({ color: 0xc9a27a, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false, fog: false }));
@@ -160,8 +167,8 @@ export function createUniverse(host, { onPick } = {}) {
     world[id] = { group, spin, mesh, r, sites: new Map() };
     return world[id];
   }
-  const earth = makeBody('earth', 'assets/maps/earth.jpg', { roughness: 0.85 });
-  const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.012, 64, 40), new THREE.MeshStandardMaterial({ alphaMap: load('assets/maps/earth-clouds.jpg', false), transparent: true, depthWrite: false, color: 0xffffff, roughness: 1 }));
+  const earth = makeBody('earth', MAPS.earth, { roughness: 0.85 });
+  const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.012, 64, 40), new THREE.MeshStandardMaterial({ alphaMap: load(MAPS.clouds, false), transparent: true, depthWrite: false, color: 0xffffff, roughness: 1 }));
   earth.spin.add(clouds);
   // thin blue rim of atmosphere
   const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.06, 64, 32), new THREE.ShaderMaterial({
@@ -171,8 +178,8 @@ export function createUniverse(host, { onPick } = {}) {
     fragmentShader: 'varying vec3 n; varying vec3 w; void main(){ float f = pow(0.72 - dot(n, vec3(0.,0.,1.)), 3.); gl_FragColor = vec4(0.35,0.6,1.0,1.) * clamp(f,0.,1.) * 1.4; }',
   }));
   earth.group.add(atmo);
-  makeBody('moon', 'assets/maps/moon.jpg');
-  makeBody('mars', 'assets/maps/mars.jpg');
+  makeBody('moon', MAPS.moon);
+  makeBody('mars', MAPS.mars);
 
   function faceSun(id, sub) {
     const w = world[id], s = lonLat(sub.lat, sub.lonEast);
@@ -261,7 +268,7 @@ export function createUniverse(host, { onPick } = {}) {
       rec.load = () => rec.ready;
     } else if (spec) {
       // loaded on first request (the stop before it asks), not all at start-up
-      rec.load = () => (rec.ready ??= new Promise((done) => gltf.load(spec.file, (g) => {
+      rec.load = () => (rec.ready ??= new Promise((done) => gltf.load(asset(spec.file), (g) => {
         rec.height = normalise(g.scene, spec, size);
         g.scene.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
         if (!onWorld) { g.scene.position.y -= rec.height / 2; }
@@ -591,6 +598,10 @@ export function createUniverse(host, { onPick } = {}) {
       hemi.intensity = 0.08 + v * (body === 'moon' ? 0.55 : 0.3);
       dirty = true;
     },
+    /** Every file the scene will load (for the loading screen). */
+    files: () => [...Object.values(MAPS).map(mapSrc), ...Object.values(MODELS).map((m) => m.file)],
+    /** Fetch and start the Draco geometry decoder now (it runs in a worker), so the first model does not wait for it. */
+    decoder: () => draco.preload(),
     /** Prepare slow one-time work (model reflections) while the reader is still on the first screens. */
     warm() { (window.requestIdleCallback || ((f) => setTimeout(f, 1200)))(() => env(), { timeout: 4000 }); },
     /** Stop drawing while something covers the whole view (the loading screen). */

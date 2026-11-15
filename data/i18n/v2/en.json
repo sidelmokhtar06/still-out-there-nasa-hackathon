@@ -143,5 +143,10 @@
   "scroll.model.insight": "NASA 3D model (NASA 3D Resources), placed at its real site. It shows InSight before its arm lifted the seismometer and heat probe from the deck onto the ground.",
   "scroll.model.built": "NASA has no public 3D model of this machine, so we built a simplified one from NASA photos and published sizes. The photo is the real thing.",
   "scroll.model.surveyor3": "NASA has no public 3D model of Surveyor 3, so we built a simplified one from NASA photos and published sizes. Its TV camera and soil scoop are missing on purpose: the Apollo 12 astronauts took them home in 1969.",
-  "scroll.seePhoto": "See the real photo"
+  "scroll.seePhoto": "See the real photo",
+  "scroll.boot.download": "Downloading the Moon, Mars and the machines…",
+  "scroll.boot.prepare": "Getting everything ready…",
+  "scroll.no3d": "This browser can't show the 3D journey, so here are the machines as a page. Everything else (stories, real photos, live times) still works.",
+  "scroll.tour": "Watch a 2-minute tour",
+  "scroll.stopTour": "Stop the tour"
 }

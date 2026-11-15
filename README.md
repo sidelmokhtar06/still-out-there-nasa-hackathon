@@ -25,6 +25,8 @@ Everything you see is lit as it is **right now**. Earth, the Moon and Mars are t
 - Flights between worlds show the real light-travel time; the flight to Mars is long on purpose.
 - Sound (music, real NASA recordings, captions for the Apollo 11 lift-off) starts with the sound button.
 - `classic.html` keeps the earlier step-by-step version (Next button and Map).
+- **Watch a 2-minute tour** (on the first screen, or `index.html?tour`) scrolls itself through the highlights; any scroll, tap or key stops it.
+- The site opens only once everything is downloaded and ready (about 12.8 MB on desktop, less on phones; story narration streams when you press Listen). Browsers without 3D (WebGL) get the same stops as a plain page of cards; `?no3d` shows it.
 
 **Stories:** "Hear its story" opens five chapters. Each sentence lights up as the AI voice reads it, and every chapter has a **Real data** drawer with the sourced facts.
 

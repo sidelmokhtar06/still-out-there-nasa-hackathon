@@ -15,7 +15,13 @@
 </head>
 <body class="scroll-mode">
   <a class="skip" href="#card" data-i18n="app.skip">Skip to content</a>
-  <div id="boot" class="boot" aria-live="polite"><span class="boot-mark" aria-hidden="true"></span><p class="boot-text">Calling the machines…</p><span class="boot-line" aria-hidden="true"><i></i></span></div>
+  <div id="boot" class="boot boot-full" aria-live="polite">
+    <span class="boot-mark" aria-hidden="true"></span>
+    <p class="boot-title" data-i18n="app.title">Still Out There</p>
+    <p class="boot-text">Calling the machines…</p>
+    <div class="boot-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+    <p class="boot-meta"><span class="boot-pct">0%</span><span class="boot-mb"></span></p>
+  </div>
   <div id="space" class="space"></div>
   <div class="vignette" aria-hidden="true"></div>
   <div class="dust-veil" id="veil" aria-hidden="true"></div>
@@ -40,6 +46,7 @@
   <p id="caption" class="caption" aria-live="polite" hidden></p>
   <p id="pick-hint" class="pick-hint" aria-hidden="true" hidden></p>
   <div id="layer" hidden></div>
+  <button type="button" class="btn tour-stop" id="tour-stop" hidden data-i18n="scroll.stopTour">Stop the tour</button>
 
   <!-- the tall track that the scroll runs through; sections are sized by js/scroll/scroll.js -->
   <div id="track" class="track" aria-hidden="true"></div>

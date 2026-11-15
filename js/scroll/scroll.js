@@ -6,13 +6,14 @@
 import { h } from '../v1/dom.js';
 import { t, loadLanguage, preferredLanguage, chooseLanguage, LANGUAGES, lang, fmtNumber, fmtDate } from '../i18n.js';
 import { loadData, artifact } from '../data.js';
-import { createUniverse } from './universe.js';
+import { createUniverse, MAPS, mapSrc, MODELS } from './universe.js';
 import { MACHINES, buildStop, tickStop, stopName } from '../stops.js';
 import { imageOf } from '../story.js';
 import { rollCall } from '../rollcall.js';
 import { lightTimes, clock, kmOf } from '../reach.js';
 import { daysSince } from '../live.js';
-import { soundOn, setSound, mix, captions } from './sound.js';
+import { soundOn, setSound, mix, captions, SOUND_FILES } from './sound.js';
+import { preload, asset } from './preload.js';
 import { layerOpen, closeLayer, showStory, showPhoto, showSources, holdButton, paintSignal, paintPayoff } from './layers.js';
 
 const $ = (id) => document.getElementById(id);
@@ -173,6 +174,7 @@ function startCard() {
     h('div', { class: 'send' }, holdButton(() => goTo('moon'))),
     h('div', { class: 'start-row' },
       h('p', { class: 'cue' }, h('i', { 'aria-hidden': 'true' }), t('scroll.cue')),
+      h('button', { type: 'button', class: 'btn btn-tour', onclick: startTour }, '▶ ', t('scroll.tour')),
       h('button', { type: 'button', class: 'btn btn-sound-on', hidden: soundOn() ? '' : null, onclick: () => toggleSound(true) },
         h('span', { class: 'eq', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')), t('scroll.soundOn'))));
 }
@@ -581,17 +583,112 @@ function keys(e) {
   if (next) goTo(next);
 }
 
+// ---- the loading screen ----------------------------------------------------------------------
+function bootStage(text, f, loaded, total) {
+  const boot = $('boot');
+  if (!boot) return;
+  if (text) boot.querySelector('.boot-text').textContent = text;
+  if (f != null) {
+    boot.querySelector('.boot-bar i').style.transform = `scaleX(${f})`;
+    boot.querySelector('.boot-bar').setAttribute('aria-valuenow', String(Math.round(f * 100)));
+    boot.querySelector('.boot-pct').textContent = `${Math.round(f * 100)}%`;
+  }
+  if (total) boot.querySelector('.boot-mb').textContent = `${(loaded / 1e6).toFixed(1)} / ${(total / 1e6).toFixed(1)} MB`;
+}
+/** Can this browser draw 3D at all? */
+function hasWebGL() {
+  if (new URLSearchParams(location.search).has('no3d')) return false;      // for testing the fallback
+  try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
+}
+/** Every file the journey uses, so it can all be downloaded before it opens. */
+function journeyFiles() {
+  const photos = MACHINES.map((id) => imageOf(artifact(id))?.src).filter(Boolean);
+  const draco = ['draco_wasm_wrapper.js', 'draco_decoder.wasm'].map((f) => `vendor/three/addons/libs/draco/gltf/${f}`);
+  return [...Object.values(MAPS).map(mapSrc), ...Object.values(MODELS).map((m) => m.file), ...SOUND_FILES, ...photos, ...draco];
+}
+
+// ---- no 3D: the same journey as a plain page of cards ------------------------------------------------
+function textJourney() {
+  document.body.classList.add('no-3d');
+  ctx = { U: { hasModel: () => false, modelNote: () => null, laser: () => {}, bodyPos: () => null, deepPos: () => null, machinePos: () => null }, photo: showPhoto };
+  const intro = h('section', { class: 'card', id: 'snap-start' },
+    h('h1', {}, t('app.title')), h('p', { class: 'tagline' }, t('start.line')), h('p', { class: 'muted' }, t('scroll.no3d')));
+  const skip = new Set(['start', 'dust', 'lastCall', 'deep']);
+  const sections = HOLDS.filter((id) => !skip.has(id)).map((id) => {
+    const v = view(SEG[IDX[id]].card);
+    v.el._tick?.(1);
+    return h('section', { class: 'tj-stop', id: `snap-${id}` }, v.el);
+  });
+  $('card').replaceChildren(h('div', { class: 'text-journey' }, intro, ...sections));
+  buildChrome();
+  addEventListener('hashchange', () => route());
+  roll = rollCall($('rollcall-mount')); paintPayoff(new Date());
+  route(true);
+  $('boot').remove();
+  setInterval(() => { if (document.hidden) return; const now = new Date(); for (const s of document.querySelectorAll('.tj-stop')) tickStop(s, now); roll?.tick(now); paintSignal(now); }, 1000);
+}
+
+// ---- the tour: a two-minute guided scroll through the highlights -------------------------------------
+// [stop, seconds travelling there, seconds resting]
+const TOUR = [['moon', 7, 2], ['eagle', 11, 3], ['echo', 8, 4], ['mars', 9, 2], ['dust', 8, 2], ['lastCall', 3, 4], ['ingenuity', 9, 3], ['pioneer10', 10, 3], ['finale', 9, 0]];
+let touring = null;
+function startTour() {
+  if (touring) return;
+  if (!soundOn()) toggleSound(true);           // the tour is made to be heard (a click started it, so sound may play)
+  document.documentElement.classList.add('touring');
+  const stop = $('tour-stop'); stop.hidden = false;
+  let i = -1, t0 = 0, from = scrollY, to = 0, phase = 'rest', restUntil = 0;
+  const easeIO = (x) => x * x * (3 - 2 * x);
+  const step = (now) => {
+    if (!touring) return;
+    if (phase === 'rest' && now >= restUntil) {
+      i++;
+      if (i >= TOUR.length) { endTour(); return; }
+      from = scrollY; to = anchorY(TOUR[i][0]); t0 = now; phase = 'move';
+    }
+    if (phase === 'move') {
+      const k = Math.min(1, (now - t0) / (TOUR[i][1] * 1000));
+      scrollTo(0, from + (to - from) * easeIO(k));
+      if (k >= 1) {
+        phase = 'rest'; restUntil = now + TOUR[i][2] * 1000;
+        if (TOUR[i][0] === 'echo') document.querySelector('#card .fire button')?.click();     // fire the laser
+      }
+    }
+    touring = requestAnimationFrame(step);
+  };
+  touring = requestAnimationFrame(step);
+}
+function endTour() {
+  if (touring) cancelAnimationFrame(touring);
+  touring = null;
+  document.documentElement.classList.remove('touring');
+  $('tour-stop').hidden = true;
+}
+
 async function start() {
   history.scrollRestoration = 'manual';
   await loadLanguage(preferredLanguage());
   await loadData();
+  if (!hasWebGL()) { textJourney(); return; }
+
+  // 1. download everything (into memory), with real progress
+  bootStage(t('scroll.boot.download'), 0);
+  const failed = await preload(journeyFiles(), (f, loaded, total) => bootStage(null, f * 0.88, loaded, total));
+  if (failed.length) console.warn('not preloaded (will load when needed):', failed);
+  // cards and the lightbox show the photos from memory too
+  for (const id of MACHINES) { const img = imageOf(artifact(id)); if (img) img.src = asset(img.src); }
+
+  // 2. prepare: decode the maps, build the models, compile the graphics
+  bootStage(t('scroll.boot.prepare'), 0.9);
   U = createUniverse($('space'), { onPick: (id) => goTo(id) });
   for (const id of MACHINES) U.addMachine(artifact(id), imageOf(artifact(id))?.src);
   ctx = { U, photo: showPhoto };
-  U.ready('eagle'); U.ready('opportunity');
   U.pause(true);
-  $('boot').querySelector('.boot-text').textContent = t('boot.loading');
-  await Promise.race([Promise.all([U.loaded(['stars', 'earth', 'moon']), U.ready('eagle')]), new Promise((r) => setTimeout(r, 4000))]);
+  U.decoder();
+  const prepared = Promise.all([U.loaded(['stars', 'earth-clouds', 'earth', 'moon', 'mars']), ...Object.keys(MODELS).map((id) => U.ready(id))]);
+  await Promise.race([prepared, new Promise((r) => setTimeout(r, 25000))]);      // never hang on a broken file
+  for (const id of Object.keys(MODELS)) asked.add(id);
+  bootStage(null, 0.96);
 
   buildChrome();
   // sound was on last time: browsers still need one tap or key press before it can play
@@ -604,17 +701,23 @@ async function start() {
   addEventListener('hashchange', () => route());
   addEventListener('keydown', keys);
   picking();
+  // any touch, wheel or key while the tour runs hands control back to you
+  for (const ev of ['wheel', 'touchstart', 'keydown', 'pointerdown']) addEventListener(ev, (e) => { if (touring && !e.target.closest?.('#tour-stop')) endTour(); }, { passive: true });
+  $('tour-stop').addEventListener('click', endTour);
   route(true);
-  requestAnimationFrame(loop);
-
   U.prewarm();
-  for (const id of ['opportunity', 'ingenuity', 'kepler', 'pioneer10']) { asked.add(id); U.ready(id).then(() => U.prewarm()); }
-  U.loaded(['mars']).then(() => U.prewarm());
-  U.pause(false); U.warm();
+  U.warm();
+  requestAnimationFrame(loop);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));     // first frames drawn behind the curtain
+  bootStage(null, 1);
+
+  // 3. open
+  U.pause(false);
   document.body.classList.add('is-ready');
   const boot = $('boot');
   if (reduced()) boot.remove(); else gsap.to(boot, { opacity: 0, duration: 0.9, onComplete: () => boot.remove() });
   setTimeout(() => boot.remove(), 1500);      // the fade slows down on weak devices; never leave the curtain up
+  if (new URLSearchParams(location.search).has('tour')) setTimeout(startTour, 800);
   paintSignal();
   setInterval(() => {
     if (document.hidden) return;

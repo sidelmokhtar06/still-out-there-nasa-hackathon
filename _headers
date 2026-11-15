@@ -1,0 +1,22 @@
+# Cloudflare Pages caching rules. The paths don't overlap on purpose: Cloudflare combines the headers of
+# every rule that matches, so each file gets exactly one Cache-Control.
+
+# Pages, code and data: always check for a newer version (a cheap 304), so a fix shows up immediately.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+/data/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Heavy files (models, maps, music, recordings, photos): keep a week, so return visits open almost instantly.
+/assets/*
+  Cache-Control: public, max-age=604800
+
+# Third-party libraries never change at the same address.
+/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
