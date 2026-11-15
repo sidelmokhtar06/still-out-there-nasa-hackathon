@@ -103,7 +103,7 @@
   "start.line": "Dix machines sont encore là-haut. Neuf se sont tues il y a longtemps. Appelons-les.",
   "world.moon.line": "Quatre machines des années Apollo. L'une d'elles a encore un travail.",
   "world.mars.line": "Deux rovers, un atterrisseur et un hélicoptère, au repos dans la poussière.",
-  "world.deep.line": "Deux machines qui ne sont sur aucun monde. Elles s'éloignent toujours.",
+  "world.deep.line": "Étape bonus : deux machines qui ne se sont jamais posées nulle part. Elles s'éloignent toujours.",
   "world.tapHint": "Touchez un nom sur le globe, ou appuyez sur Suivant.",
   "voice.listen": "Écouter",
   "voice.stop": "Arrêter",

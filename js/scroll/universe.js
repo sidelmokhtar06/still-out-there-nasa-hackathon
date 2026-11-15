@@ -363,6 +363,8 @@ export function createUniverse(host, { onPick } = {}) {
   const tmp = V(0, 0, 0);
   function placeLabels() {
     const w = canvas.clientWidth, h = canvas.clientHeight, placed = [];
+    // the card's box: a label under the text would collide with it, so it hides there
+    const cardEl = document.querySelector('#card .card'), box = cardEl?.getBoundingClientRect();
     for (const L of labels) {
       const p = L.get();
       tmp.copy(p).project(camera);
@@ -372,6 +374,7 @@ export function createUniverse(host, { onPick } = {}) {
         hidden = nrm.dot(toCam) < 0.05;
       }
       const x = (tmp.x * 0.5 + 0.5) * w, y = (-tmp.y * 0.5 + 0.5) * h;
+      if (box && box.width && x > box.left - 16 && x < box.right + 16 && y > box.top - 16 && y < box.bottom + 16) hidden = true;
       // nudge labels that would sit on top of each other
       let flip = x > w * 0.7;
       if (placed.some((q) => Math.abs(q.y - y) < 22 && Math.abs(q.x - x) < 170 && q.flip === flip)) flip = !flip;
