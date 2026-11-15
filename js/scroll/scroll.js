@@ -519,7 +519,7 @@ function paint(y) {
     hush: seg.id === 'lastCall' ? 0.9 * band(u, 0, 0.3) * (1 - band(u, 0.8, 1)) : 0,
     engine, dust: storm,
     chorus: spaceSound(seg.id, u).chorus, voyager: spaceSound(seg.id, u).voyager,
-    lift: i < iL ? -1 : i === iL ? u : seg.world === 'moon' ? 2 : 3,
+    lift: i < iL ? -1 : i === iL ? u : i === iL + 1 ? 2 : 3,     // the crew's voices stop once you leave Eagle
     devil: seg.id === 'dust' ? storm : 0,
     mile: $('flight').dataset.mile || '',
     call: seg.id === 'lastCall' && u > 0.12 && u < 0.85,

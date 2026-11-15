@@ -26,6 +26,29 @@ const CAPTIONS = [
 
 let ctx = null, nodes = null, last = null, lastMile = '', lastCall = false;
 let ascentPlay = null, prevLift = 0, prevDust = 0, onCaption = () => {};
+
+// Voices take turns. Narration, stories, the roll call and the machines' own recordings play through <audio>
+// elements; while one plays, the lift-off recording stops and everything else steps back to a quiet bed. When the
+// lift-off starts, any narration stops. Whichever started last wins.
+const voices = new Set();
+let voiceOn = false;
+const playMedia = HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play = function play() {
+  if (!this.dataset?.tracked) {
+    const off = () => { voices.delete(this); onVoices(); };
+    this.addEventListener('pause', off); this.addEventListener('ended', off); this.addEventListener('error', off);
+    if (this.dataset) this.dataset.tracked = '1';
+  }
+  voices.add(this); onVoices();
+  return playMedia.call(this);
+};
+function onVoices() {
+  const on = voices.size > 0;
+  if (on === voiceOn) return;
+  voiceOn = on;
+  if (on) stopAscent();
+  if (last) mix(...last);
+}
 /** The page passes a function that shows a caption ({who, text}) or hides it (null). */
 export const captions = (fn) => { onCaption = fn; };
 
@@ -106,6 +129,7 @@ function oneShot(name, level = 1) {
 /** Eagle's lift-off recording, with captions that follow it. */
 function startAscent() {
   ascentPlay?.stop();
+  for (const a of [...voices]) a.pause();          // the crew has the floor
   const p = oneShot('ascent', 1);
   if (!p) return;
   ascentPlay = p;
@@ -143,18 +167,19 @@ export function mix(m) {
   if (lift >= 0.02 && lift <= 1 && prevLift < 0.02) startAscent();
   if (lift < 0 || lift > 2) stopAscent();
   prevLift = lift;
-  const duck = (1 - 0.65 * engine) * (1 - hush) * (ascentPlay ? 0.4 : 1);     // music steps back while the crew talks
+  const voice = voiceOn ? 0.25 : 1;                                            // a narration is playing: a quiet bed
+  const duck = (1 - 0.65 * engine) * (1 - hush) * (ascentPlay ? 0.4 : 1) * voice;     // music steps back while the crew talks
   for (const w of Object.keys(n.loops)) set(n.loops[w].gain, MUSIC * (music[w] || 0) * duck, 0.25);
   set(n.muffle.frequency, 18000 * (1 - dust) ** 3 + 650, 0.2);
   // Aldrin called it "a very quiet ride": only a short, soft thump at ignition, the real voices carry the moment
   set(n.rumble.gain, 0.5 * engine, 0.05);
   // the storm: real Mars wind, plus a little generated high wind for small speakers
-  set(n.real.wind.gain, 1.1 * dust ** 1.2, 0.25);
+  set(n.real.wind.gain, 1.1 * dust ** 1.2 * (voiceOn ? 0.35 : 1), 0.25);
   set(n.wind.gain, 0.16 * dust ** 1.4, 0.2);
   set(n.windF.frequency, 380 + 520 * dust, 0.4);
   // between worlds: the real radio waves of space, played as sound (quietly, under the music)
-  set(n.real.chorus.gain, 0.32 * chorus, 0.4);
-  set(n.real.voyager.gain, 0.3 * voyager, 0.4);
+  set(n.real.chorus.gain, 0.32 * chorus * voice, 0.4);
+  set(n.real.voyager.gain, 0.3 * voyager * voice, 0.4);
   // the dust devil roars past once as the storm thickens (forward only)
   if (devil >= 0.6 && prevDust < 0.6) oneShot('devil', 0.9);
   prevDust = devil;
