@@ -287,7 +287,7 @@ function lastCallCard() {
   return h('section', { class: 'card card-center' }, h('p', { class: 'eyebrow' }, t('dust.after')), h('h1', {}, first.trim()), h('p', { class: 'lead' }, rest.join(' ').trim()));
 }
 
-/** Each card is built once and kept. Cards for stops come from stops.js, as on the classic page. */
+/** Each card is built once and kept. Cards for stops come from stops.js. */
 const views = new Map();
 function view(card) {
   if (!card) return null;

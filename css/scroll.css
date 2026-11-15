@@ -58,7 +58,7 @@ html { scroll-snap-type: y proximity; }
 
 .gauge-ticks span:last-child { transform: translateX(-100%); }
 [dir="rtl"] .gauge-ticks span:last-child { transform: translateX(100%); }
-.card .hint { display: none; }             /* "press Next" belongs to the classic journey */
+.card .hint { display: none; }             /* "press Next" belonged to the old step-by-step journey */
 
 @media (max-width: 760px) {
   /* phones: the rail becomes a row of dots under the top bar, clear of the card */
@@ -121,7 +121,6 @@ html:has(body.layer-open) { overflow: hidden; }
 @media (max-width: 760px) {
   .rail { gap: 7px; inset-inline-end: 12px; }
   .rail a i { width: 6px; height: 6px; border-width: 1px; }
-  .tool-classic { display: none; }
 }
 @media (max-height: 560px) { .rail { display: none; } }
 
@@ -240,3 +239,6 @@ button.label.pin:hover span { background: none; color: var(--accent); }
 [dir="rtl"] .card-center :is(h2, p) { text-align: center; }
 [dir="rtl"] .card h1 { text-align: right; }
 [dir="rtl"] .card-center h1 { text-align: center; }
+
+/* phones: no room in the top bar; the Sources page is linked from the last card */
+@media (max-width: 760px) { .tool-sources { display: none; } }

@@ -26,7 +26,6 @@ Everything you see is lit as it is **right now**. Earth, the Moon and Mars are t
 - Hops between machines on the same world fly low across the ground; the caption gives the real distance and compass heading from the two landing sites.
 - Tap a machine for its real photo. On Eagle, the rover, the Apollo 14 mirror and InSight, the "?" photo is a game: find the machine in the real orbital image (labels painted out), then see how many metres off you were and NASA's labelled original.
 - Sound (music, real NASA recordings, captions for the Apollo 11 lift-off) starts with the sound button.
-- `classic.html` keeps the earlier step-by-step version (Next button and Map).
 - **Watch a 2-minute tour** (on the first screen, or `index.html?tour`) scrolls itself through the highlights; any scroll, tap or key stops it.
 - The site opens only once everything you see is downloaded and ready (about 8.6 MB on a phone, about 16 s on 4G). Sound (about 4.7 MB) follows in the background right after, since it plays only once you turn it on; story narration streams when you press Listen. Browsers without 3D (WebGL) get the same stops as a plain page of cards; `?no3d` shows it.
 
@@ -56,7 +55,6 @@ js/scroll/scroll.js    the track: sections, camera moves, cards, readouts, all d
 js/scroll/universe.js  the 3D scene with scroll-scrubbed flights, Mars sky, dust storm, Eagle's lift-off
 js/scroll/sound.js     music and real recordings mixed from the scroll position
 js/scroll/layers.js    story / photo / sources overlays
-classic.html  js/app.js js/universe.js  the earlier step-by-step version
 assets/audio/music/    background music loops; assets/audio/scroll/ real NASA recordings (see CREDITS.md)
 js/stops.js      the 18 stops: camera shot, floating labels, card of words
 js/story.js      story player with sentence-synced narration
