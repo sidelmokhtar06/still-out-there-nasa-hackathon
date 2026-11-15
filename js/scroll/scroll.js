@@ -718,11 +718,12 @@ function hasWebGL() {
   if (new URLSearchParams(location.search).has('no3d')) return false;      // for testing the fallback
   try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
 }
-/** Every file the journey uses, so it can all be downloaded before it opens. */
+/** Every file the journey shows, so it can all be downloaded before it opens. Sound is off until you press the button,
+ *  so its files (about a third of the total) come right after the journey opens, in the background. */
 function journeyFiles() {
   const photos = MACHINES.map((id) => imageOf(artifact(id))?.src).filter(Boolean);
   const draco = ['draco_wasm_wrapper.js', 'draco_decoder.wasm'].map((f) => `vendor/three/addons/libs/draco/gltf/${f}`);
-  return [...Object.values(MAPS).map(mapSrc), ...Object.values(MODELS).map((m) => m.file), ...SOUND_FILES, ...photos, ...NOW_FILES, ...draco];
+  return [...Object.values(MAPS).map(mapSrc), ...Object.values(MODELS).map((m) => m.file), ...photos, ...NOW_FILES, ...draco];
 }
 
 // ---- no 3D: the same journey as a plain page of cards ------------------------------------------------
@@ -838,6 +839,7 @@ async function start() {
   const boot = $('boot');
   if (reduced()) boot.remove(); else gsap.to(boot, { opacity: 0, duration: 0.9, onComplete: () => boot.remove() });
   setTimeout(() => boot.remove(), 1500);      // the fade slows down on weak devices; never leave the curtain up
+  preload(SOUND_FILES, () => {});      // sound, in the background (it plays only once you turn it on)
   if (new URLSearchParams(location.search).has('tour')) setTimeout(startTour, 800);
   setInterval(() => {
     if (document.hidden) return;
