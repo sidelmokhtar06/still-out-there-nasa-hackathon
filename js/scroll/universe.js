@@ -602,8 +602,8 @@ export function createUniverse(host, { onPick } = {}) {
       : id === 'surveyor3' ? 'scroll.model.surveyor3' : BUILT[id] ? 'scroll.model.built' : null),
     /** Night light at a site with the Sun down: earthshine on the Moon (bluish), faint starlight on Mars. 0…1 */
     night(v, body) {
-      hemi.color.setHex(body === 'moon' ? 0x9fb6ff : 0x8a8090);
-      hemi.intensity = 0.08 + v * (body === 'moon' ? 0.55 : 0.3);
+      hemi.color.setHex(body === 'moon' ? 0x9fb6ff : 0x9c96ae);
+      hemi.intensity = 0.08 + v * (body === 'moon' ? 0.55 : 0.5);   // a little brighter than real starlight, so the shape still reads
       dirty = true;
     },
     /** Every file the scene will load (for the loading screen). */

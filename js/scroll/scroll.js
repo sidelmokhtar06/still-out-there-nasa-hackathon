@@ -175,9 +175,7 @@ function startCard() {
     h('div', { class: 'send' }, holdButton(() => goTo('moon'))),
     h('div', { class: 'start-row' },
       h('p', { class: 'cue' }, h('i', { 'aria-hidden': 'true' }), t('scroll.cue')),
-      h('button', { type: 'button', class: 'btn btn-tour', onclick: startTour }, '▶ ', t('scroll.tour')),
-      h('button', { type: 'button', class: 'btn btn-sound-on', hidden: soundOn() ? '' : null, onclick: () => toggleSound(true) },
-        h('span', { class: 'eq', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')), t('scroll.soundOn'))));
+      h('button', { type: 'button', class: 'btn btn-tour', onclick: startTour }, '▶ ', t('scroll.tour'))));
 }
 const nowLine = (now = new Date()) => t('v2.now', { date: fmtDate(now), time: now.toISOString().slice(11, 19) });
 
@@ -269,6 +267,9 @@ function view(card) {
 
 /** On a machine's card: one bold line on the science it made possible, and its "where it is today" picture. */
 function addTodayAndScience(el, id) {
+  // one quiet line for status and the live sky ("Silent · 20,936 days · Now: sunlit…"), so the card reads quote first
+  const nowP = el.querySelector('p.now'), status = el.querySelector('.status-line');
+  if (nowP && status) { const sp = h('span', { class: 'now', 'data-now': id }); sp.textContent = nowP.textContent; nowP.remove(); status.append(sp); }
   const learned = h('p', { class: 'learned' }, h('span', { class: 'learned-k' }, t('scroll.learned')), t(`scroll.learned.${id}`));
   const voice = el.querySelector('.voice');
   if (voice) voice.after(learned); else el.querySelector('.actions')?.before(learned);

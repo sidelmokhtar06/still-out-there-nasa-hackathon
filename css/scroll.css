@@ -185,3 +185,8 @@ body.no-3d .rail-where { display: none; }
   .learned { padding: 8px 12px; font-size: .875rem; }
   .card-machine .info { display: none; }              /* model notes stay in the full story and on desktop */
 }
+
+/* status and the live sky share one quiet line on machine cards */
+.status-line .now { margin-inline-start: 10px; font-size: .8125rem; color: var(--muted); }
+.status-line .now::before { top: .5em; }
+.card-machine .info summary { opacity: .7; }
