@@ -323,6 +323,7 @@ function addTodayAndScience(el, id) {
 function split(h1) {
   if (h1.dataset.split) return;
   h1.dataset.split = '1';
+  h1.dir = 'auto';      // an English name on the Arabic page keeps its word order (the words are separate boxes)
   for (const node of [...h1.childNodes]) {
     if (node.nodeType !== 3) continue;
     const frag = document.createDocumentFragment();

@@ -232,3 +232,11 @@ button.label.pin:hover span { background: none; color: var(--accent); }
 @keyframes hint-glow { 50% { box-shadow: 0 0 0 6px rgba(255, 106, 51, .15); } }
 @media (max-width: 760px) { .sound-hint { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 96px); font-size: .8125rem; max-width: calc(100vw - 32px); white-space: normal; text-align: center; } }
 @media (prefers-reduced-motion: reduce) { .sound-hint { animation: none; } }
+
+/* Arabic: English lines inside the page (names, and text not yet translated) read left to right in the right order,
+   while still sitting on the right like the Arabic around them */
+[dir="rtl"] :is(.card, .flight, .lightbox, .caption, .sound-hint) :is(h2, p, figcaption, li, .lbl),
+[dir="rtl"] .label span { unicode-bidi: plaintext; text-align: right; }
+[dir="rtl"] .card-center :is(h2, p) { text-align: center; }
+[dir="rtl"] .card h1 { text-align: right; }
+[dir="rtl"] .card-center h1 { text-align: center; }
